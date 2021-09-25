@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.controller.RamseteController;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
@@ -23,8 +24,8 @@ public class Robot extends TimedRobot {
 
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0
   // to 1.
-  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(6);
-  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(6);
+  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
+  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
 
   private final Drivetrain m_drive = new Drivetrain();
   private final RamseteController m_ramsete = new RamseteController();
@@ -39,8 +40,10 @@ public class Robot extends TimedRobot {
     m_trajectory =
         TrajectoryGenerator.generateTrajectory(
             new Pose2d(2, 2, new Rotation2d()),
-            List.of(),
-            new Pose2d(6, 4, new Rotation2d()),
+            List.of(
+              new Translation2d(3,2)
+            ),
+            new Pose2d(4, 4, new Rotation2d(Math.PI*0.5)),
             new TrajectoryConfig(1, 1));
   }
 
@@ -51,17 +54,21 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
-    // m_timer.reset();
-    // m_timer.start();
-    // m_drive.resetOdometry(m_trajectory.getInitialPose());
+    m_timer.reset();
+    m_timer.start();
+    m_drive.resetOdometry(m_trajectory.getInitialPose());
   }
 
   @Override
   public void autonomousPeriodic() {
-    // double elapsed = m_timer.get();
-    // Trajectory.State reference = m_trajectory.sample(elapsed);
-    // ChassisSpeeds speeds = m_ramsete.calculate(m_drive.getPose(), reference);
-    // m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
+    double elapsed = m_timer.get();
+    Trajectory.State reference = m_trajectory.sample(elapsed);
+    ChassisSpeeds speeds = m_ramsete.calculate(m_drive.getPose(), reference);
+
+    System.out.println(reference.toString());
+    System.out.println(m_drive.getPose());
+    System.out.println(speeds.toString());
+    m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
   }
 
   @Override
