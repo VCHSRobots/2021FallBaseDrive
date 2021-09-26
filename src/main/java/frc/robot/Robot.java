@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
+import frc.vision.VisionServer;
 import java.util.List;
 
 public class Robot extends TimedRobot {
@@ -32,6 +33,8 @@ public class Robot extends TimedRobot {
   private final Timer m_timer = new Timer();
   private Trajectory m_trajectory;
   private boolean isSimulation=false;
+
+  private VisionServer mVisionServer = VisionServer.getInstance();
 
   @Override
   public void robotInit() {
