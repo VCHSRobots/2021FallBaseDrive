@@ -27,24 +27,24 @@ public class Robot extends TimedRobot {
   private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
 
-  private final Drivetrain m_drive = new Drivetrain();
+  private Drivetrain m_drive=null;
   private final RamseteController m_ramsete = new RamseteController();
   private final Timer m_timer = new Timer();
   private Trajectory m_trajectory;
+  private boolean isSimulation=false;
 
   @Override
   public void robotInit() {
     // Flush NetworkTables every loop. This ensures that robot pose and other values
     // are sent during every iteration.
+    System.out.println("RobotInit-----------");
     setNetworkTablesFlushEnabled(true);
-    m_trajectory =
-        TrajectoryGenerator.generateTrajectory(
-            new Pose2d(2, 2, new Rotation2d()),
-            List.of(
-              new Translation2d(3,2)
-            ),
-            new Pose2d(4, 4, new Rotation2d(Math.PI*0.5)),
-            new TrajectoryConfig(1, 1));
+    m_trajectory = TrajectoryGenerator.generateTrajectory(
+        new Pose2d(2, 2, new Rotation2d(0)),
+        List.of(new Translation2d(3, 2)), 
+        new Pose2d(4, 4, new Rotation2d(Math.PI * 0.5)), 
+        new TrajectoryConfig(1, 1)
+      );
   }
 
   @Override
@@ -54,9 +54,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
+    System.out.println("Autonomous init-----------");
     m_timer.reset();
     m_timer.start();
-    m_drive.resetOdometry(m_trajectory.getInitialPose());
+    var pose=m_trajectory.getInitialPose();
+    m_drive.resetOdometry(pose);
   }
 
   @Override
@@ -65,9 +67,9 @@ public class Robot extends TimedRobot {
     Trajectory.State reference = m_trajectory.sample(elapsed);
     ChassisSpeeds speeds = m_ramsete.calculate(m_drive.getPose(), reference);
 
-    System.out.println(reference.toString());
-    System.out.println(m_drive.getPose());
-    System.out.println(speeds.toString());
+    // System.out.println(reference.toString());
+    // System.out.println(m_drive.getPose());
+    // System.out.println(speeds.toString());
     m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
   }
 
@@ -77,21 +79,34 @@ public class Robot extends TimedRobot {
     // Get the x speed. We are inverting this because Xbox controllers return
     // negative values when we push forward.
     double temp_y_left = util.deadband(m_controller.getY(GenericHID.Hand.kLeft), 0.1);
-    double xSpeed =
-        -m_speedLimiter.calculate(temp_y_left) * Drivetrain.kMaxSpeed;
+    double xSpeed = -m_speedLimiter.calculate(temp_y_left) * Drivetrain.kMaxSpeed;
 
     // Get the rate of angular rotation. We are inverting this because we want a
     // positive value when we pull to the left (remember, CCW is positive in
     // mathematics). Xbox controllers return positive values when you pull to
     // the right by default.
     double temp_x_right = util.deadband(m_controller.getX(GenericHID.Hand.kRight), 0.1);
-    double rot =
-        -m_rotLimiter.calculate(temp_x_right) * Drivetrain.kMaxAngularSpeed;
+    double rot = -m_rotLimiter.calculate(temp_x_right) * Drivetrain.kMaxAngularSpeed;
     m_drive.drive(xSpeed, rot);
+  }
+
+  @Override
+  public void simulationInit() {
+    System.out.println("Simulation init-----------");
+    this.isSimulation = true;
   }
 
   @Override
   public void simulationPeriodic() {
     m_drive.simulationPeriodic();
   }
+
+  @Override
+  public void disabledInit() {
+    System.out.println("Disabled init-----------");
+    if (m_drive==null){
+      m_drive = new Drivetrain(this.isSimulation);
+    }
+  }
+
 }
