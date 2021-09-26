@@ -53,7 +53,7 @@ public class Drivetrain {
   public static final double kMaxAngularSpeed = Math.PI;
 
   // private static final double kTrackWidth = 0.346075; // 13'5/8"
-  private static final double kTrackWidth = 0.6;
+  private static final double kTrackWidth = 0.346075;
   private static final double kWheelRadius = 0.1016 * 0.5; // 4 inch
   private static final int kEncoderResolution = 2048; // falcon 500 + talon FX encoder
   private static final double kEncoderTicksPerMeter = (50.0/12.0) * kEncoderResolution / ( 2.0*kWheelRadius*Math.PI ); // replace 12 with real Motor:Wheel gear Ratio
@@ -61,8 +61,8 @@ public class Drivetrain {
   private final WPI_TalonFX m_leftLeader = new WPI_TalonFX(11);
   private final WPI_TalonFX m_rightLeader = new WPI_TalonFX(12);
 
-  private final PIDController m_leftPIDController = new PIDController(2.5, 0, 0);
-  private final PIDController m_rightPIDController = new PIDController(2.5, 0, 0);
+  private final PIDController m_leftPIDController = new PIDController(1, 0, 0);
+  private final PIDController m_rightPIDController = new PIDController(1, 0, 0);
 
   private AHRS m_gyro = new AHRS(SPI.Port.kMXP);
   private final AnalogGyro m_analog_gyro = new AnalogGyro(0);
@@ -71,7 +71,7 @@ public class Drivetrain {
   private DifferentialDriveOdometry m_odometry;
 
   // Gains are for example purposes only - must be determined for your own robot!
-  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(0.1, 0.25, 1);
+  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 2, 1);
 
   // Simulation classes help us simulate our robot
   private double leftVolt,rightVolt;
@@ -143,8 +143,8 @@ public class Drivetrain {
       leftOutput = m_leftPIDController.calculate(m_leftLeader.getSelectedSensorVelocity()*10/kEncoderTicksPerMeter, speeds.leftMetersPerSecond);
       rightOutput = m_rightPIDController.calculate(m_rightLeader.getSelectedSensorVelocity()*10/kEncoderTicksPerMeter, speeds.rightMetersPerSecond);
     }
-    this.leftVolt=leftOutput + leftFeedforward;
-    this.rightVolt=rightOutput + rightFeedforward;
+    this.leftVolt=leftOutput + leftFeedforward*0.5;
+    this.rightVolt=rightOutput + rightFeedforward*0.5;
     m_leftLeader.setVoltage(this.leftVolt);
     m_rightLeader.setVoltage(this.rightVolt);
     //System.out.printf("set speed %.2f,%.2f\n",this.leftVolt,this.rightVolt);

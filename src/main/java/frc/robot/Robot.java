@@ -41,8 +41,11 @@ public class Robot extends TimedRobot {
     setNetworkTablesFlushEnabled(true);
     m_trajectory = TrajectoryGenerator.generateTrajectory(
         new Pose2d(2, 2, new Rotation2d(0)),
-        List.of(new Translation2d(3, 2)), 
-        new Pose2d(4, 4, new Rotation2d(Math.PI * 0.5)), 
+        List.of(
+          new Translation2d(8, 2),
+          new Translation2d(8, 5)
+          ), 
+        new Pose2d(2, 5, new Rotation2d(Math.PI)), 
         new TrajectoryConfig(1, 1)
       );
   }
