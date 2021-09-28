@@ -65,21 +65,21 @@ public class Drivetrain {
   private final PIDController m_rightPIDController = new PIDController(1, 0, 0);
 
   private AHRS m_gyro = new AHRS(SPI.Port.kMXP);
-  private final AnalogGyro m_analog_gyro = new AnalogGyro(0);
+  private AnalogGyro m_analog_gyro;
 
   private final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(kTrackWidth);
   private DifferentialDriveOdometry m_odometry;
 
   // Gains are for example purposes only - must be determined for your own robot!
-  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(1, 2, 1);
+  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(0.5, 1, 0.5);
 
   // Simulation classes help us simulate our robot
   private double leftVolt,rightVolt;
-  private final Encoder m_leftEncoder;
-  private final Encoder m_rightEncoder;
-  private final AnalogGyroSim m_gyroSim;
-  private final EncoderSim m_leftEncoderSim;
-  private final EncoderSim m_rightEncoderSim = new EncoderSim(m_rightEncoder);
+  private Encoder m_leftEncoder;
+  private Encoder m_rightEncoder;
+  private AnalogGyroSim m_gyroSim;
+  private EncoderSim m_leftEncoderSim;
+  private EncoderSim m_rightEncoderSim;
   private final Field2d m_fieldSim = new Field2d();
   private final LinearSystem<N2, N2, N2> m_drivetrainSystem = LinearSystemId.identifyDrivetrainSystem(1.98, 0.2, 1.5,
        0.3);
@@ -92,19 +92,25 @@ public class Drivetrain {
     // distance traveled for one rotation of the wheel divided by the encoder
     // resolution.
     this.isSimulation=isSimulation;
-    if (this.isSimulation){
+    if (Robot.isSimulation()){
+
+    // if (this.isSimulation){
+      m_analog_gyro = new AnalogGyro(0);
+      m_analog_gyro.calibrate();
+
       m_odometry = new DifferentialDriveOdometry(m_analog_gyro.getRotation2d());
+
       m_leftEncoder = new Encoder(0, 1);
       m_rightEncoder = new Encoder(2, 3);
       m_gyroSim = new AnalogGyroSim(m_analog_gyro);
       m_leftEncoderSim = new EncoderSim(m_leftEncoder);
-      
+      m_rightEncoderSim = new EncoderSim(m_rightEncoder);
       m_leftEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
       m_rightEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
       m_leftEncoder.reset();
       m_rightEncoder.reset();
       
-      m_analog_gyro.calibrate();
+      
     }else{
       m_odometry= new DifferentialDriveOdometry(m_gyro.getRotation2d());
     }
@@ -143,7 +149,7 @@ public class Drivetrain {
     var rightFeedforward = m_feedforward.calculate(speeds.rightMetersPerSecond);
     double leftOutput;
     double rightOutput;
-    if (isSimulation){
+    if (Robot.isSimulation()){
       leftOutput = m_leftPIDController.calculate(m_leftEncoder.getRate(), speeds.leftMetersPerSecond);
       rightOutput = m_rightPIDController.calculate(m_rightEncoder.getRate(), speeds.rightMetersPerSecond);
     }else{
@@ -170,7 +176,7 @@ public class Drivetrain {
 
   /** Update robot odometry. */
   public void updateOdometry() {
-    if (isSimulation){
+    if (Robot.isSimulation()){
       m_odometry.update(m_analog_gyro.getRotation2d(), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
     }else{
       m_odometry.update(m_gyro.getRotation2d(), m_leftLeader.getSelectedSensorPosition()/kEncoderTicksPerMeter, m_rightLeader.getSelectedSensorPosition()/kEncoderTicksPerMeter);
@@ -182,7 +188,7 @@ public class Drivetrain {
     m_leftLeader.setSelectedSensorPosition(0);
     m_rightLeader.setSelectedSensorPosition(0);
     m_drivetrainSimulator.setPose(pose);
-    if (isSimulation){
+    if (Robot.isSimulation()){
       m_odometry.resetPosition(pose, m_analog_gyro.getRotation2d());
       m_leftEncoder.reset();
       m_rightEncoder.reset();
@@ -219,7 +225,7 @@ public class Drivetrain {
   /** Update odometry - this should be run every robot loop. */
   public void periodic() {
     updateOdometry();
-    if (isSimulation){
+    if (Robot.isSimulation()){
       tableYaw.setNumber(m_analog_gyro.getRotation2d().getDegrees());
     }else{
       tableYaw.setNumber(m_gyro.getRotation2d().getDegrees());
