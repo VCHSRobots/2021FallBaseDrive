@@ -61,8 +61,8 @@ public class Drivetrain {
   private final WPI_TalonFX m_leftLeader = new WPI_TalonFX(11);
   private final WPI_TalonFX m_rightLeader = new WPI_TalonFX(12);
 
-  private final PIDController m_leftPIDController = new PIDController(1, 0, 0);
-  private final PIDController m_rightPIDController = new PIDController(1, 0, 0);
+  private final PIDController m_leftPIDController = new PIDController(2, 0, 0);
+  private final PIDController m_rightPIDController = new PIDController(2, 0, 0);
 
   private AHRS m_gyro = new AHRS(SPI.Port.kMXP);
   private AnalogGyro m_analog_gyro;
@@ -71,7 +71,7 @@ public class Drivetrain {
   private DifferentialDriveOdometry m_odometry;
 
   // Gains are for example purposes only - must be determined for your own robot!
-  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(0.5, 1, 0.5);
+  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(0.25, 0.5, 0.25);
 
   // Simulation classes help us simulate our robot
   private double leftVolt,rightVolt;
@@ -156,8 +156,8 @@ public class Drivetrain {
       leftOutput = m_leftPIDController.calculate(m_leftLeader.getSelectedSensorVelocity()*10/kEncoderTicksPerMeter, speeds.leftMetersPerSecond);
       rightOutput = m_rightPIDController.calculate(m_rightLeader.getSelectedSensorVelocity()*10/kEncoderTicksPerMeter, speeds.rightMetersPerSecond);
     }
-    this.leftVolt=leftOutput + leftFeedforward*0.5;
-    this.rightVolt=rightOutput + rightFeedforward*0.5;
+    this.leftVolt=leftOutput + leftFeedforward;
+    this.rightVolt=rightOutput + rightFeedforward;
     m_leftLeader.setVoltage(this.leftVolt);
     m_rightLeader.setVoltage(this.rightVolt);
     //System.out.printf("set speed %.2f,%.2f\n",this.leftVolt,this.rightVolt);
