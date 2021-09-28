@@ -75,16 +75,16 @@ public class Drivetrain {
 
   // Simulation classes help us simulate our robot
   private double leftVolt,rightVolt;
-  private final Encoder m_leftEncoder = new Encoder(0, 1);
-  private final Encoder m_rightEncoder = new Encoder(2, 3);
-  private final AnalogGyroSim m_gyroSim = new AnalogGyroSim(m_analog_gyro);
-  private final EncoderSim m_leftEncoderSim = new EncoderSim(m_leftEncoder);
+  private final Encoder m_leftEncoder;
+  private final Encoder m_rightEncoder;
+  private final AnalogGyroSim m_gyroSim;
+  private final EncoderSim m_leftEncoderSim;
   private final EncoderSim m_rightEncoderSim = new EncoderSim(m_rightEncoder);
   private final Field2d m_fieldSim = new Field2d();
   private final LinearSystem<N2, N2, N2> m_drivetrainSystem = LinearSystemId.identifyDrivetrainSystem(1.98, 0.2, 1.5,
        0.3);
   private final DifferentialDrivetrainSim m_drivetrainSimulator = new DifferentialDrivetrainSim(m_drivetrainSystem, 
-       DCMotor.getFalcon500(1), 12, kTrackWidth, kWheelRadius, null);
+       DCMotor.getFalcon500(1), 50.0/12.0, kTrackWidth, kWheelRadius, null);
 
   /** Subsystem constructor. */
   public Drivetrain(boolean isSimulation) {
@@ -93,17 +93,24 @@ public class Drivetrain {
     // resolution.
     this.isSimulation=isSimulation;
     if (this.isSimulation){
-      m_odometry= new DifferentialDriveOdometry(m_analog_gyro.getRotation2d());
+      m_odometry = new DifferentialDriveOdometry(m_analog_gyro.getRotation2d());
+      m_leftEncoder = new Encoder(0, 1);
+      m_rightEncoder = new Encoder(2, 3);
+      m_gyroSim = new AnalogGyroSim(m_analog_gyro);
+      m_leftEncoderSim = new EncoderSim(m_leftEncoder);
+      
+      m_leftEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
+      m_rightEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
+      m_leftEncoder.reset();
+      m_rightEncoder.reset();
+      
+      m_analog_gyro.calibrate();
     }else{
       m_odometry= new DifferentialDriveOdometry(m_gyro.getRotation2d());
     }
-    m_leftEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
-    m_rightEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
-    m_leftEncoder.reset();
-    m_rightEncoder.reset();
+    
 
     m_gyro.calibrate();
-    m_analog_gyro.calibrate();
 
     TalonFXConfiguration _drive_config = new TalonFXConfiguration();
     _drive_config.feedbackNotContinuous = true;
@@ -172,15 +179,13 @@ public class Drivetrain {
 
   /** Resets robot odometry. */
   public void resetOdometry(Pose2d pose) {
-    m_leftEncoder.reset();
-    m_rightEncoder.reset();
     m_leftLeader.setSelectedSensorPosition(0);
     m_rightLeader.setSelectedSensorPosition(0);
     m_drivetrainSimulator.setPose(pose);
-    m_gyro.calibrate();
-    m_analog_gyro.calibrate();
     if (isSimulation){
       m_odometry.resetPosition(pose, m_analog_gyro.getRotation2d());
+      m_leftEncoder.reset();
+      m_rightEncoder.reset();
     }else{
       m_odometry.resetPosition(pose, m_gyro.getRotation2d());
     }
