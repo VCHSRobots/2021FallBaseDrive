@@ -28,11 +28,10 @@ public class Robot extends TimedRobot {
   private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
 
-  private Drivetrain m_drive=null;
+  private Drivetrain m_drive=new Drivetrain();
   private final RamseteController m_ramsete = new RamseteController();
   private final Timer m_timer = new Timer();
   private Trajectory m_trajectory;
-  private boolean isSimulation=false;
 
   private VisionServer mVisionServer = VisionServer.getInstance();
 
@@ -99,7 +98,6 @@ public class Robot extends TimedRobot {
   @Override
   public void simulationInit() {
     System.out.println("Simulation init-----------");
-    this.isSimulation = true;
   }
 
   @Override
@@ -110,9 +108,6 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledInit() {
     System.out.println("Disabled init-----------");
-    if (m_drive==null){
-      m_drive = new Drivetrain(this.isSimulation);
-    }
   }
 
 }

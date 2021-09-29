@@ -17,6 +17,8 @@ import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.hal.SimDouble;
+import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.simulation.AnalogGyroSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
@@ -65,7 +67,6 @@ public class Drivetrain {
   private final PIDController m_rightPIDController = new PIDController(2, 0, 0);
 
   private AHRS m_gyro = new AHRS(SPI.Port.kMXP);
-  private AnalogGyro m_analog_gyro;
 
   private final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(kTrackWidth);
   private DifferentialDriveOdometry m_odometry;
@@ -77,7 +78,6 @@ public class Drivetrain {
   private double leftVolt,rightVolt;
   private Encoder m_leftEncoder;
   private Encoder m_rightEncoder;
-  private AnalogGyroSim m_gyroSim;
   private EncoderSim m_leftEncoderSim;
   private EncoderSim m_rightEncoderSim;
   private final Field2d m_fieldSim = new Field2d();
@@ -87,34 +87,21 @@ public class Drivetrain {
        DCMotor.getFalcon500(1), 50.0/12.0, kTrackWidth, kWheelRadius, null);
 
   /** Subsystem constructor. */
-  public Drivetrain(boolean isSimulation) {
+  public Drivetrain() {
     // Set the distance per pulse for the drive encoders. We can simply use the
     // distance traveled for one rotation of the wheel divided by the encoder
     // resolution.
-    this.isSimulation=isSimulation;
+    m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d());
     if (Robot.isSimulation()){
-
-    // if (this.isSimulation){
-      m_analog_gyro = new AnalogGyro(0);
-      m_analog_gyro.calibrate();
-
-      m_odometry = new DifferentialDriveOdometry(m_analog_gyro.getRotation2d());
-
       m_leftEncoder = new Encoder(0, 1);
       m_rightEncoder = new Encoder(2, 3);
-      m_gyroSim = new AnalogGyroSim(m_analog_gyro);
       m_leftEncoderSim = new EncoderSim(m_leftEncoder);
       m_rightEncoderSim = new EncoderSim(m_rightEncoder);
       m_leftEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
       m_rightEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
       m_leftEncoder.reset();
       m_rightEncoder.reset();
-      
-      
-    }else{
-      m_odometry= new DifferentialDriveOdometry(m_gyro.getRotation2d());
-    }
-    
+    }   
 
     m_gyro.calibrate();
 
@@ -177,7 +164,7 @@ public class Drivetrain {
   /** Update robot odometry. */
   public void updateOdometry() {
     if (Robot.isSimulation()){
-      m_odometry.update(m_analog_gyro.getRotation2d(), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+      m_odometry.update(m_gyro.getRotation2d(), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
     }else{
       m_odometry.update(m_gyro.getRotation2d(), m_leftLeader.getSelectedSensorPosition()/kEncoderTicksPerMeter, m_rightLeader.getSelectedSensorPosition()/kEncoderTicksPerMeter);
     }
@@ -188,12 +175,10 @@ public class Drivetrain {
     m_leftLeader.setSelectedSensorPosition(0);
     m_rightLeader.setSelectedSensorPosition(0);
     m_drivetrainSimulator.setPose(pose);
+    m_odometry.resetPosition(pose, m_gyro.getRotation2d());
     if (Robot.isSimulation()){
-      m_odometry.resetPosition(pose, m_analog_gyro.getRotation2d());
       m_leftEncoder.reset();
       m_rightEncoder.reset();
-    }else{
-      m_odometry.resetPosition(pose, m_gyro.getRotation2d());
     }
   }
 
@@ -219,22 +204,22 @@ public class Drivetrain {
     m_leftEncoderSim.setRate(m_drivetrainSimulator.getLeftVelocityMetersPerSecond());
     m_rightEncoderSim.setDistance(m_drivetrainSimulator.getRightPositionMeters());
     m_rightEncoderSim.setRate(m_drivetrainSimulator.getRightVelocityMetersPerSecond());
-    m_gyroSim.setAngle(-m_drivetrainSimulator.getHeading().getDegrees());
+
+    // this code updates the navX angle in Sim
+    // m_gyroSim.setAngle(-m_drivetrainSimulator.getHeading().getDegrees());
+    int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
+    SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
+    angle.set(-m_drivetrainSimulator.getHeading().getDegrees());
   }
 
   /** Update odometry - this should be run every robot loop. */
   public void periodic() {
     updateOdometry();
-    if (Robot.isSimulation()){
-      tableYaw.setNumber(m_analog_gyro.getRotation2d().getDegrees());
-    }else{
-      tableYaw.setNumber(m_gyro.getRotation2d().getDegrees());
-    }
+    tableYaw.setNumber(m_gyro.getRotation2d().getDegrees());
     tableLeftEncoder.setNumber(m_leftLeader.getSelectedSensorPosition());
     tableRightEncoder.setNumber(m_rightLeader.getSelectedSensorPosition());
     tableLeftVelocity.setNumber(m_leftLeader.getSelectedSensorVelocity() *10.0/ kEncoderTicksPerMeter);
     tableRightVelocity.setNumber(m_rightLeader.getSelectedSensorVelocity() *10.0/ kEncoderTicksPerMeter);
-    
     m_fieldSim.setRobotPose(m_odometry.getPoseMeters());
   }
 }
