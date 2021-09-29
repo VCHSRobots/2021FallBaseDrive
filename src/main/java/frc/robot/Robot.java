@@ -25,8 +25,8 @@ public class Robot extends TimedRobot {
 
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0
   // to 1.
-  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
-  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
+  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(5);
+  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(5);
 
   private Drivetrain m_drive=new Drivetrain();
   private final RamseteController m_ramsete = new RamseteController();
@@ -83,14 +83,14 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     // Get the x speed. We are inverting this because Xbox controllers return
     // negative values when we push forward.
-    double temp_y_left = util.deadband(m_controller.getY(GenericHID.Hand.kLeft), 0.1);
+    double temp_y_left = util.deadband(m_controller.getY(GenericHID.Hand.kLeft), 0.15);
     double xSpeed = -m_speedLimiter.calculate(temp_y_left) * Drivetrain.kMaxSpeed;
 
     // Get the rate of angular rotation. We are inverting this because we want a
     // positive value when we pull to the left (remember, CCW is positive in
     // mathematics). Xbox controllers return positive values when you pull to
     // the right by default.
-    double temp_x_right = util.deadband(m_controller.getX(GenericHID.Hand.kRight), 0.1);
+    double temp_x_right = util.deadband(m_controller.getX(GenericHID.Hand.kRight), 0.15);
     double rot = -m_rotLimiter.calculate(temp_x_right) * Drivetrain.kMaxAngularSpeed;
     m_drive.drive(xSpeed, rot);
   }
