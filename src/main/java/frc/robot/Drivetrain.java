@@ -75,14 +75,17 @@ public class Drivetrain {
   private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(0.821, 1.5, 0.14);
 
   // Simulation classes help us simulate our robot
+  private double aySim=0,azSim=0,visionDelaySim=0;
+  private final double targetHeight=1;
+  private final double targetX=4.0, targetY=8.0;
   private double leftVolt,rightVolt;
   private Encoder m_leftEncoder;
   private Encoder m_rightEncoder;
   private EncoderSim m_leftEncoderSim;
   private EncoderSim m_rightEncoderSim;
   private final Field2d m_fieldSim = new Field2d();
-  private final LinearSystem<N2, N2, N2> m_drivetrainSystem = LinearSystemId.identifyDrivetrainSystem(1.98, 0.2, 1.5,
-       0.3);
+  private final LinearSystem<N2, N2, N2> m_drivetrainSystem = LinearSystemId.identifyDrivetrainSystem(1.5, 0.14, 1.5,
+       0.2);
   private final DifferentialDrivetrainSim m_drivetrainSimulator = new DifferentialDrivetrainSim(m_drivetrainSystem, 
        DCMotor.getFalcon500(1), 50.0/12.0, kTrackWidth, kWheelRadius, null);
 
@@ -210,6 +213,25 @@ public class Drivetrain {
     int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
     SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
     angle.set(-m_drivetrainSimulator.getHeading().getDegrees());
+
+    var mypose = this.getPose();
+    var dx=mypose.getX()-targetX;
+    var dy=mypose.getY()-targetY;
+    azSim=Math.atan(targetHeight/Math.hypot(dx, dy));
+    //Math.tan
+    var dh=Math.atan(dy/dx);
+    if (dh<0){
+      dh=Math.PI+dh;
+    }
+    var myheading=mypose.getRotation().getRadians();
+    if (myheading<-2.8){
+      myheading=myheading+Math.PI*2;
+    }
+    aySim=(dh-myheading);
+    System.out.printf("%.2f,%.2f d=%.2f myheading=%.2f ay=%.2f,az=%.2f\n",
+      mypose.getX(),mypose.getY(),
+      dh*180/Math.PI,myheading,
+      aySim,azSim);
   }
 
   /** Update odometry - this should be run every robot loop. */
