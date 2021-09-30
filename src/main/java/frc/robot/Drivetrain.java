@@ -49,7 +49,6 @@ public class Drivetrain {
 
 
   // 3 meters per second.
-  public boolean isSimulation;
   public static final double kMaxSpeed = 1.5;
   // 1/2 rotation per second.
   public static final double kMaxAngularSpeed = 2*Math.PI;
@@ -77,7 +76,7 @@ public class Drivetrain {
   // Simulation classes help us simulate our robot
   private double aySim=0,azSim=0,visionDelaySim=0;
   private final double targetHeight=1;
-  private final double targetX=4.0, targetY=8.0;
+  private final double targetX=8.0, targetY=8.0;
   private double leftVolt,rightVolt;
   private Encoder m_leftEncoder;
   private Encoder m_rightEncoder;
@@ -161,7 +160,11 @@ public class Drivetrain {
    */
   @SuppressWarnings("ParameterName")
   public void drive(double xSpeed, double rot) {
-    setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0, rot)));
+    if (Robot.isSimulation()){
+      setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds((0.33-azSim)*3, 0, aySim)));
+    }else{
+      setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0, rot)));
+    }
   }
 
   /** Update robot odometry. */
