@@ -75,8 +75,7 @@ public class Drivetrain {
 
   // Simulation classes help us simulate our robot
   private double aySim=0,azSim=0,visionDelaySim=0;
-  private final double targetHeight=1;
-  private final double targetX=8.0, targetY=8.0;
+  private final double targetHeight=3;
   private double leftVolt,rightVolt;
   private Encoder m_leftEncoder;
   private Encoder m_rightEncoder;
@@ -88,6 +87,7 @@ public class Drivetrain {
   private final DifferentialDrivetrainSim m_drivetrainSimulator = new DifferentialDrivetrainSim(m_drivetrainSystem, 
        DCMotor.getFalcon500(1), 50.0/12.0, kTrackWidth, kWheelRadius, null);
 
+  public double targetX=3.0, targetY=8.0;
   /** Subsystem constructor. */
   public Drivetrain() {
     // Set the distance per pulse for the drive encoders. We can simply use the
@@ -161,7 +161,7 @@ public class Drivetrain {
   @SuppressWarnings("ParameterName")
   public void drive(double xSpeed, double rot) {
     if (Robot.isSimulation()){
-      setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds((0.33-azSim)*3, 0, aySim)));
+      setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds((1.2-azSim)*3, 0, aySim)));
     }else{
       setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0, rot)));
     }
@@ -231,10 +231,7 @@ public class Drivetrain {
       myheading=myheading+Math.PI*2;
     }
     aySim=(dh-myheading);
-    System.out.printf("%.2f,%.2f d=%.2f myheading=%.2f ay=%.2f,az=%.2f\n",
-      mypose.getX(),mypose.getY(),
-      dh*180/Math.PI,myheading,
-      aySim,azSim);
+    System.out.printf("%.2f,%.2f d=%.2f myheading=%.2f ay=%.2f,az=%.2f\n", mypose.getX(),mypose.getY(), dh*180/Math.PI,myheading, aySim,azSim);
   }
 
   /** Update odometry - this should be run every robot loop. */

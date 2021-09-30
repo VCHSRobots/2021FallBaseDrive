@@ -35,6 +35,7 @@ public class Robot extends TimedRobot {
   private Trajectory m_trajectory;
 
   private VisionServer mVisionServer = VisionServer.getInstance();
+  private double goalTS;
 
   @Override
   public void robotInit() {
@@ -65,11 +66,16 @@ public class Robot extends TimedRobot {
     m_timer.start();
     var pose=m_trajectory.getInitialPose();
     m_drive.resetOdometry(pose);
+    goalTS=0;
   }
 
   @Override
   public void autonomousPeriodic() {
     double elapsed = m_timer.get();
+    if (elapsed-goalTS>8){
+      m_drive.targetX+=1;
+      goalTS=elapsed;
+    }
     Trajectory.State reference = m_trajectory.sample(elapsed);
     ChassisSpeeds speeds = m_ramsete.calculate(m_drive.getPose(), reference);
 
@@ -109,7 +115,6 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledInit() {
     m_timer.reset();
-    m_timer.start();
     var pose=m_trajectory.getInitialPose();
     m_drive.resetOdometry(pose);
     m_drive.setSpeeds(new DifferentialDriveWheelSpeeds());
