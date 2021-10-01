@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj.system.plant.LinearSystemId;
 import edu.wpi.first.wpiutil.math.numbers.N2;
 
 import com.ctre.phoenix.motorcontrol.InvertType;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
@@ -126,6 +127,8 @@ public class Drivetrain {
     m_rightLeader.setSelectedSensorPosition(0);
     m_leftLeader.setInverted(InvertType.InvertMotorOutput);
     m_rightLeader.setInverted(InvertType.None);
+    m_leftLeader.setNeutralMode(NeutralMode.Brake);
+    m_rightLeader.setNeutralMode(NeutralMode.Brake);
     
     SmartDashboard.putData("Field", m_fieldSim);
   }
