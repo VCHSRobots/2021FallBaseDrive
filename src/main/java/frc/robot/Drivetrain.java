@@ -50,9 +50,9 @@ public class Drivetrain {
 
   // 3 meters per second.
   public boolean isSimulation;
-  public static final double kMaxSpeed = 1.5;
+  public static double kMaxSpeed = 3;
   // 1/2 rotation per second.
-  public static final double kMaxAngularSpeed = 2*Math.PI;
+  public static double kMaxAngularSpeed = 2*Math.PI;
 
   // private static final double kTrackWidth = 0.346075; // 13'5/8"
   private static final double kTrackWidth = 0.346075;
@@ -63,8 +63,8 @@ public class Drivetrain {
   private final WPI_TalonFX m_leftLeader = new WPI_TalonFX(11);
   private final WPI_TalonFX m_rightLeader = new WPI_TalonFX(12);
 
-  private final PIDController m_leftPIDController = new PIDController(2.25, 0, 0);
-  private final PIDController m_rightPIDController = new PIDController(2.25, 0, 0);
+  private final PIDController m_leftPIDController = new PIDController(2.2, 0, 0);
+  private final PIDController m_rightPIDController = new PIDController(2.2, 0, 0);
 
   private AHRS m_gyro = new AHRS(SPI.Port.kMXP);
 
@@ -81,8 +81,8 @@ public class Drivetrain {
   private EncoderSim m_leftEncoderSim;
   private EncoderSim m_rightEncoderSim;
   private final Field2d m_fieldSim = new Field2d();
-  private final LinearSystem<N2, N2, N2> m_drivetrainSystem = LinearSystemId.identifyDrivetrainSystem(1.98, 0.2, 1.5,
-       0.3);
+  private final LinearSystem<N2, N2, N2> m_drivetrainSystem = LinearSystemId.identifyDrivetrainSystem(1.5, 0.14, 1.5,
+       0.14);
   private final DifferentialDrivetrainSim m_drivetrainSimulator = new DifferentialDrivetrainSim(m_drivetrainSystem, 
        DCMotor.getFalcon500(1), 50.0/12.0, kTrackWidth, kWheelRadius, null);
 

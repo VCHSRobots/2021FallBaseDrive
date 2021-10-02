@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.SlewRateLimiter;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -20,6 +23,8 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
 import frc.vision.VisionServer;
 import java.util.List;
 
+import javax.swing.tree.TreePath;
+
 public class Robot extends TimedRobot {
   private final XboxController m_controller = new XboxController(0);
 
@@ -31,9 +36,22 @@ public class Robot extends TimedRobot {
   private Drivetrain m_drive=new Drivetrain();
   private final RamseteController m_ramsete = new RamseteController();
   private final Timer m_timer = new Timer();
+  
   private Trajectory m_trajectory;
+  private Trajectory m_trajectoryA;
+  private Trajectory m_trajectoryB;
+  private Trajectory m_trajectoryC;
 
   private VisionServer mVisionServer = VisionServer.getInstance();
+
+  public NetworkTableInstance instance = NetworkTableInstance.getDefault();
+  public NetworkTable table = instance.getTable("/auto");
+  public NetworkTableEntry ntAutoA = table.getEntry("AutoA");
+  public NetworkTableEntry ntAutoB = table.getEntry("AutoB");
+  public NetworkTableEntry ntAutoC = table.getEntry("AutoC");
+  private boolean isAChecked = false;
+  private boolean isBChecked = false;
+  private boolean isCChecked = false;
 
   @Override
   public void robotInit() {
@@ -41,17 +59,74 @@ public class Robot extends TimedRobot {
     // are sent during every iteration.
     System.out.println("RobotInit-----------");
     setNetworkTablesFlushEnabled(true);
-    m_trajectory = TrajectoryGenerator.generateTrajectory(
-        new Pose2d(2, 2, new Rotation2d(0)),
-        List.of(
-          new Translation2d(8, 2),
-          new Translation2d(8, 5)
-          ), 
-        new Pose2d(2, 5, new Rotation2d(Math.PI)), 
-        new TrajectoryConfig(1, 1)
-      );
-  }
+    
+    ntAutoA.setBoolean(true);
+    ntAutoB.setBoolean(false);
+    ntAutoC.setBoolean(false);
 
+    m_trajectory = TrajectoryGenerator.generateTrajectory(
+        new Pose2d(0, 0, new Rotation2d(0)),
+        List.of(
+          ), 
+        new Pose2d(1, 0, new Rotation2d(Math.PI)), 
+        new TrajectoryConfig(3, 1)
+      );
+  
+    
+    m_trajectoryA = TrajectoryGenerator.generateTrajectory(
+        new Pose2d(0, 0, new Rotation2d(0)),
+        List.of(
+          // first turn left
+          new Translation2d(2, 0),
+          new Translation2d(2.5, 0),
+          // going straight
+          new Translation2d(2.8, 0.5),
+          new Translation2d(2.8, 1),
+          new Translation2d(2.8, 1.5),
+          new Translation2d(2.8, 2),
+          new Translation2d(2.8, 2.5),
+          new Translation2d(2.8, 2.7),
+          new Translation2d(2.8, 2.9),
+          new Translation2d(2.8, 3.075),
+          new Translation2d(2.8, 3.3),
+          new Translation2d(2.8, 3.575),
+          new Translation2d(2.3, 3.8),
+          new Translation2d(2, 3.8),
+          new Translation2d(1.8, 3.8),
+          // second turn left
+          new Translation2d(1.75, 3.8),
+          new Translation2d(1.5, 3.8),
+          new Translation2d(1.25, 3.8),
+          new Translation2d(1, 3.8),
+          new Translation2d(.75, 3.8)
+          ), 
+        new Pose2d(0.6, 3.8, new Rotation2d(Math.PI)), 
+        new TrajectoryConfig(2.5, 3)
+      );
+  
+
+    m_trajectoryB = TrajectoryGenerator.generateTrajectory(
+      new Pose2d(0, 0, new Rotation2d(0)),
+      List.of(
+        new Translation2d(2, 2),
+        new Translation2d(0, 0)
+        ), 
+      new Pose2d(3, 1, new Rotation2d(Math.PI/2)), 
+      new TrajectoryConfig(1, 1)
+      );
+  
+
+    m_trajectoryC = TrajectoryGenerator.generateTrajectory(
+      new Pose2d(0, 0, new Rotation2d(0)),
+      List.of(
+        new Translation2d(2, 1),
+        new Translation2d(3, 3)
+        ), 
+      new Pose2d(1, 4, new Rotation2d(Math.PI)), 
+      new TrajectoryConfig(1, 1)
+      );
+  
+    }
   @Override
   public void robotPeriodic() {
     m_drive.periodic();
@@ -62,20 +137,62 @@ public class Robot extends TimedRobot {
     System.out.println("Autonomous init-----------");
     m_timer.reset();
     m_timer.start();
-    var pose=m_trajectory.getInitialPose();
+
+    isAChecked = ntAutoA.getBoolean(false);
+    isBChecked = ntAutoB.getBoolean(false);
+    isCChecked = ntAutoC.getBoolean(false);
+
+    Pose2d pose;
+
+    if (isAChecked) {
+      pose=m_trajectory.getInitialPose();
+
+    } else if(isBChecked) {
+      pose=m_trajectory.getInitialPose();
+
+    } else if(isCChecked) {
+      pose=m_trajectory.getInitialPose();
+
+    }
+    else {
+      pose = m_drive.getPose();
+    }
+
     m_drive.resetOdometry(pose);
   }
 
   @Override
   public void autonomousPeriodic() {
+    
     double elapsed = m_timer.get();
-    Trajectory.State reference = m_trajectory.sample(elapsed);
-    ChassisSpeeds speeds = m_ramsete.calculate(m_drive.getPose(), reference);
+
+    Trajectory.State reference;
+    ChassisSpeeds speeds;
+
+    if (isAChecked) {
+      reference = m_trajectoryA.sample(elapsed);
+      speeds = m_ramsete.calculate(m_drive.getPose(), reference);
+
+    } else if(isBChecked) {
+      reference = m_trajectoryB.sample(elapsed);
+      speeds = m_ramsete.calculate(m_drive.getPose(), reference);
+
+    } else if(isCChecked) {
+      reference = m_trajectoryC.sample(elapsed);
+      speeds = m_ramsete.calculate(m_drive.getPose(), reference);
+
+    } else {
+      speeds = new ChassisSpeeds(0, 0, 0);
+
+    }
+
+      m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
+
 
     // System.out.println(reference.toString());
     // System.out.println(m_drive.getPose());
     // System.out.println(speeds.toString());
-    m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
+
   }
 
   @Override
@@ -93,6 +210,35 @@ public class Robot extends TimedRobot {
     double temp_x_right = util.deadband(m_controller.getX(GenericHID.Hand.kRight), 0.15);
     double rot = -m_rotLimiter.calculate(temp_x_right) * Drivetrain.kMaxAngularSpeed;
     m_drive.drive(xSpeed, rot);
+
+    boolean buttonYPressed;
+    boolean buttonXPressed;
+
+    if(m_controller.getYButtonPressed()) {
+      buttonYPressed = true;
+      if(buttonYPressed) {
+
+        Drivetrain.kMaxSpeed = 6;
+
+        Drivetrain.kMaxAngularSpeed = 5*Math.PI;
+        buttonYPressed = false;
+
+      }
+    }
+
+    if(m_controller.getXButtonPressed()) {
+      buttonXPressed = true;
+      if(buttonXPressed) {
+
+        Drivetrain.kMaxSpeed = 3;
+
+        Drivetrain.kMaxAngularSpeed = 2*Math.PI;
+        buttonYPressed = false;
+
+      }
+    }
+
+
   }
 
   @Override
