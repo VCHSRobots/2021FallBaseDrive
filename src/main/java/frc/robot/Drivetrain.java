@@ -29,6 +29,11 @@ import edu.wpi.first.wpilibj.system.LinearSystem;
 import edu.wpi.first.wpilibj.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.system.plant.LinearSystemId;
 import edu.wpi.first.wpiutil.math.numbers.N2;
+import frc.vision.VisionServer;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Socket;
 
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
@@ -46,7 +51,7 @@ public class Drivetrain {
   
   public NetworkTableEntry tableLeftVelocity = table.getEntry("LeftVel");
   public NetworkTableEntry tableRightVelocity = table.getEntry("RightVel");
-
+  volatile private Socket m_socket;
 
   // 3 meters per second.
   public static final double kMaxSpeed = 1.5;
@@ -69,6 +74,8 @@ public class Drivetrain {
 
   private final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(kTrackWidth);
   private DifferentialDriveOdometry m_odometry;
+
+  private VisionServer mVisionServer = VisionServer.getInstance();
 
   // Gains are for example purposes only - must be determined for your own robot!
   private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(0.821, 1.5, 0.14);
@@ -161,7 +168,15 @@ public class Drivetrain {
   @SuppressWarnings("ParameterName")
   public void drive(double xSpeed, double rot) {
     if (Robot.isSimulation()){
-      setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds((1.2-azSim)*3, 0, aySim)));
+      var t=mVisionServer.getTarget();
+      if (t!=null && t.isValid()){
+        var tlist=t.getTargets();
+        if (tlist.size()>0){
+          var y=tlist.get(0).getY();
+          var z=tlist.get(0).getZ();
+          setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds((1.2-z)*3, 0, y)));
+        }
+      }
     }else{
       setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0, rot)));
     }
@@ -231,7 +246,28 @@ public class Drivetrain {
       myheading=myheading+Math.PI*2;
     }
     aySim=(dh-myheading);
-    System.out.printf("%.2f,%.2f d=%.2f myheading=%.2f ay=%.2f,az=%.2f\n", mypose.getX(),mypose.getY(), dh*180/Math.PI,myheading, aySim,azSim);
+    //System.out.printf("%.2f,%.2f d=%.2f myheading=%.2f ay=%.2f,az=%.2f\n", mypose.getX(),mypose.getY(), dh*180/Math.PI,myheading, aySim,azSim);
+    String aystr= String.format("%.2f", aySim);
+    String azstr= String.format("%.2f", azSim);
+    String outstr="{\"type\":\"targets\",\"message\":{\"capturedAgoMs\":40,\"targets\":[{\"y\":" + aystr + ",\"z\":" +azstr+ "}]}}\n";
+    if (m_socket == null) {
+      try {
+          m_socket = new Socket("127.0.0.1", 3000);
+          m_socket.setSoTimeout(100);
+      } catch (IOException e) {
+          System.out.printf("%s\n","RobotConnector: Could not connect");
+          m_socket = null;
+      }
+    }
+    if (m_socket != null) {
+      try {
+        OutputStream os = m_socket.getOutputStream();
+        os.write(outstr.getBytes());
+      } catch (IOException e) {
+        System.out.printf("RobotConnection %s\n", "Could not send data to socket, try to reconnect");
+        m_socket = null;
+      }
+    }
   }
 
   /** Update odometry - this should be run every robot loop. */

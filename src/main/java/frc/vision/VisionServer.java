@@ -38,6 +38,14 @@ public class VisionServer extends CrashTrackingRunnable {
 
     private ArrayList<ServerThread> serverThreads = new ArrayList<>();
     private volatile boolean mWantsAppRestart = false;
+    private VisionUpdate currentTarget=null;
+
+    public synchronized void  setTarget(VisionUpdate target){
+        this.currentTarget=target;
+    }
+    public synchronized VisionUpdate getTarget(){
+        return this.currentTarget;
+    }
 
     public static VisionServer getInstance() {
         if (s_instance == null) {
@@ -77,13 +85,16 @@ public class VisionServer extends CrashTrackingRunnable {
 
         public void handleMessage(VisionMessage message, double timestamp) {
             if ("targets".equals(message.getType())) {
-                VisionUpdate update = VisionUpdate.generateFromJsonString(timestamp, message.getMessage());
+                VisionServer.this.setTarget(VisionUpdate.generateFromJsonString(timestamp, message.getMessage()));
+                System.out.printf("got message %s\n",message);
+                /*
                 receivers.removeAll(Collections.singleton(null));
                 if (update.isValid()) {
                     for (VisionUpdateReceiver receiver : receivers) {
                         receiver.gotUpdate(update);
                     }
                 }
+                */
             }
             if ("heartbeat".equals(message.getType())) {
                 send(HeartbeatMessage.getInstance());
@@ -107,9 +118,10 @@ public class VisionServer extends CrashTrackingRunnable {
                     double timestamp = getTimestamp();
                     lastMessageReceivedTime = timestamp;
                     String messageRaw = new String(buffer, 0, read);
+                    System.out.printf("%s",messageRaw);
                     String[] messages = messageRaw.split("\n");
                     for (String message : messages) {
-                        System.out.printf("got message %s\n",message);
+                        System.out.printf("%s--\n",message);
                         OffWireMessage parsedMessage = new OffWireMessage(message);
                         if (parsedMessage.isValid()) {
                             handleMessage(parsedMessage, timestamp);
@@ -137,8 +149,8 @@ public class VisionServer extends CrashTrackingRunnable {
      */
     private VisionServer(int port) {
         try {
-            adb = new AdbBridge();
-            m_port = port;
+            //adb = new AdbBridge();
+            //m_port = port;
             m_server_socket = new ServerSocket(port);
             //adb.start();
             //adb.reversePortForward(port, port);
@@ -148,7 +160,8 @@ public class VisionServer extends CrashTrackingRunnable {
             } catch (NullPointerException e) {
                 m_use_java_time = false;
             }
-        } catch (IOException e) {
+        } 
+        catch (IOException e) {
             e.printStackTrace();
         }
         new Thread(this).start();
