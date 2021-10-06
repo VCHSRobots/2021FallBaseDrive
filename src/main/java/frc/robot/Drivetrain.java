@@ -46,7 +46,7 @@ public class Drivetrain {
   
   public NetworkTableEntry tableLeftVelocity = table.getEntry("LeftVel");
   public NetworkTableEntry tableRightVelocity = table.getEntry("RightVel");
-
+  
 
   // 3 meters per second.
   public boolean isSimulation;
@@ -88,6 +88,7 @@ public class Drivetrain {
 
   /** Subsystem constructor. */
   public Drivetrain() {
+   
     // Set the distance per pulse for the drive encoders. We can simply use the
     // distance traveled for one rotation of the wheel divided by the encoder
     // resolution.
