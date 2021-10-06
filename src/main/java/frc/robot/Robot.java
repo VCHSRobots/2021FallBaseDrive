@@ -23,7 +23,7 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
 import frc.vision.VisionServer;
 import java.util.List;
 
-import javax.swing.tree.TreePath;
+//import javax.swing.tree.TreePath;
 
 public class Robot extends TimedRobot {
   private final XboxController m_controller = new XboxController(0);
@@ -79,28 +79,34 @@ public class Robot extends TimedRobot {
           // first turn left
           new Translation2d(2, 0),
           new Translation2d(2.5, 0),
+          new Translation2d(2.8, 0.1),
+          new Translation2d(3, 0.2),
+          new Translation2d(3.1, 0.4),
           // going straight
-          new Translation2d(2.8, 0.5),
-          new Translation2d(2.8, 1),
-          new Translation2d(2.8, 1.5),
-          new Translation2d(2.8, 2),
-          new Translation2d(2.8, 2.5),
-          new Translation2d(2.8, 2.7),
-          new Translation2d(2.8, 2.9),
-          new Translation2d(2.8, 3.075),
-          new Translation2d(2.8, 3.3),
-          new Translation2d(2.8, 3.575),
-          new Translation2d(2.3, 3.8),
-          new Translation2d(2, 3.8),
-          new Translation2d(1.8, 3.8),
+          new Translation2d(3.1, 0.7),
+          new Translation2d(3.1, 1),
+          new Translation2d(3.1, 1.5),
+          new Translation2d(3.1, 2),
+          new Translation2d(3.1, 2.5),
+          new Translation2d(3.1, 2.7),
+          new Translation2d(3.1, 2.9),
+          new Translation2d(3.1, 3.075),
+          new Translation2d(3.1, 3.3),
+          new Translation2d(3.1, 3.7),
+          new Translation2d(3.1, 4),
+          new Translation2d(3.2, 4.4),
+          new Translation2d(3, 4.7),
           // second turn left
-          new Translation2d(1.75, 3.8),
-          new Translation2d(1.5, 3.8),
-          new Translation2d(1.25, 3.8),
-          new Translation2d(1, 3.8),
-          new Translation2d(.75, 3.8)
+          new Translation2d(2.7, 4.65),
+          new Translation2d(2.3, 4.6),
+          new Translation2d(2, 4.6),
+          new Translation2d(1.8, 4.6),
+          new Translation2d(1.5, 4.6),
+          new Translation2d(1.25, 4.6),
+          new Translation2d(1, 4.6),
+          new Translation2d(0.75, 4.6)
           ), 
-        new Pose2d(0.6, 3.8, new Rotation2d(Math.PI)), 
+        new Pose2d(0.5, 4.6, new Rotation2d(Math.PI)), 
         new TrajectoryConfig(2.5, 3)
       );
   
