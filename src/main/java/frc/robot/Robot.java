@@ -79,47 +79,68 @@ public class Robot extends TimedRobot {
           // first turn left
           new Translation2d(2, 0),
           new Translation2d(2.5, 0),
-          new Translation2d(2.8, 0.1),
-          new Translation2d(3, 0.2),
-          new Translation2d(3.1, 0.4),
+          new Translation2d(2.9, 0),
+          new Translation2d(3.1, 0.1),
+          new Translation2d(3.2, 0.3),
           // going straight
-          new Translation2d(3.1, 0.7),
-          new Translation2d(3.1, 1),
-          new Translation2d(3.1, 1.5),
-          new Translation2d(3.1, 2),
-          new Translation2d(3.1, 2.5),
-          new Translation2d(3.1, 2.7),
-          new Translation2d(3.1, 2.9),
-          new Translation2d(3.1, 3.075),
-          new Translation2d(3.1, 3.3),
-          new Translation2d(3.1, 3.7),
-          new Translation2d(3.1, 4),
-          new Translation2d(3.2, 4.4),
-          new Translation2d(3, 4.7),
+          new Translation2d(3.3, 0.6),
+          new Translation2d(3.3, 1),
+          new Translation2d(3.3, 1.5),
+          new Translation2d(3.3, 2),
+          new Translation2d(3.3, 2.5),
+          new Translation2d(3.5, 3.6),
+          new Translation2d(3.5, 4.3),
+          new Translation2d(3.2, 4.3),
+          new Translation2d(3, 4.3),
           // second turn left
-          new Translation2d(2.7, 4.65),
-          new Translation2d(2.3, 4.6),
-          new Translation2d(2, 4.6),
-          new Translation2d(1.8, 4.6),
-          new Translation2d(1.5, 4.6),
-          new Translation2d(1.25, 4.6),
-          new Translation2d(1, 4.6),
-          new Translation2d(0.75, 4.6)
+          new Translation2d(2.7, 4.3),
+          new Translation2d(2.3, 4.3),
+          new Translation2d(2, 4.3),
+          new Translation2d(1.8, 4.3),
+          new Translation2d(1.5, 4.3),
+          new Translation2d(1.25, 4.3),
+          new Translation2d(1, 4.3),
+          new Translation2d(0.75, 4.3)
           ), 
-        new Pose2d(0.5, 4.6, new Rotation2d(Math.PI)), 
-        new TrajectoryConfig(2.5, 3)
+        new Pose2d(0.6, 4.3, new Rotation2d(Math.PI)), 
+        new TrajectoryConfig(1, 3)
       );
   
 
-    m_trajectoryB = TrajectoryGenerator.generateTrajectory(
-      new Pose2d(0, 0, new Rotation2d(0)),
-      List.of(
-        new Translation2d(2, 2),
-        new Translation2d(0, 0)
-        ), 
-      new Pose2d(3, 1, new Rotation2d(Math.PI/2)), 
-      new TrajectoryConfig(1, 1)
+      m_trajectoryB = TrajectoryGenerator.generateTrajectory(
+        new Pose2d(0, 0, new Rotation2d(0)),
+        List.of(
+          // first turn left
+          new Translation2d(2, 0),
+          new Translation2d(2.5, 0),
+          new Translation2d(2.9, 0),
+          new Translation2d(3.1, 0.1),
+          new Translation2d(3.2, 0.3),
+          // going straight
+          new Translation2d(3.3, 0.6),
+          new Translation2d(3.3, 1),
+          new Translation2d(3.3, 1.5),
+          new Translation2d(3.3, 2),
+          new Translation2d(3.3, 2.5),
+          new Translation2d(3.6, 3.6),
+          new Translation2d(3.6, 4.3),
+          new Translation2d(3.2, 4.3),
+          new Translation2d(2.9, 4.3),
+          // second turn left
+          new Translation2d(2.7, 4.3),
+          new Translation2d(2.5, 4.3),
+          new Translation2d(2.3, 4.5),
+          new Translation2d(2, 4.5),
+          new Translation2d(1.8, 4.5),
+          new Translation2d(1.5, 4.5),
+          new Translation2d(1.25, 4.5),
+          new Translation2d(1, 4.5),
+          new Translation2d(0.75, 4.5)
+          ), 
+        new Pose2d(0.47, 4.5, new Rotation2d(Math.PI)), 
+        new TrajectoryConfig(2, 3)
       );
+  
   
 
     m_trajectoryC = TrajectoryGenerator.generateTrajectory(
