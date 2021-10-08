@@ -52,6 +52,9 @@ public class Robot extends TimedRobot {
   private boolean isAChecked = false;
   private boolean isBChecked = false;
   private boolean isCChecked = false;
+  private boolean isADone = true;
+  private boolean isBDone = true;
+  private boolean isCDone = true;
 
   @Override
   public void robotInit() {
@@ -173,12 +176,15 @@ public class Robot extends TimedRobot {
 
     if (isAChecked) {
       pose=m_trajectory.getInitialPose();
+      isADone = false;
 
     } else if(isBChecked) {
       pose=m_trajectory.getInitialPose();
+      isBDone = false;
 
     } else if(isCChecked) {
       pose=m_trajectory.getInitialPose();
+      isCDone = false;
 
     }
     else {
@@ -211,6 +217,24 @@ public class Robot extends TimedRobot {
     } else {
       speeds = new ChassisSpeeds(0, 0, 0);
 
+    }
+
+    if (speeds.vxMetersPerSecond == 0) {
+      if(isADone == false || isBDone == false || isCDone == false) {
+        if(isAChecked) {
+          isADone = true;
+          System.out.println("Time taken (Route A): " + elapsed);
+        } else if(isBChecked) {
+          isBDone = true;
+          System.out.println("Time taken (Route B): " + elapsed);
+        } else if(isCChecked) {
+          isCDone = true;
+          System.out.println("Time taken (Route C): " + elapsed);
+        } else {
+  
+        }
+      }
+      
     }
 
       m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
