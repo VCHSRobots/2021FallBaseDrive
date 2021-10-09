@@ -75,30 +75,39 @@ public class Robot extends TimedRobot {
     m_trajectoryA = TrajectoryGenerator.generateTrajectory(
         new Pose2d(0, 0, new Rotation2d(0)),
         List.of(
-            new Translation2d(0.4, 0), 
-            new Translation2d(0.7, 0), 
+            new Translation2d(0.4, 0),
+            new Translation2d(0.7, 0),
             new Translation2d(1.2, 0),
-            new Translation2d(1.7, 0), 
-            new Translation2d(2, 0), 
-            new Translation2d(2.3, 0), 
+            new Translation2d(1.7, 0),
+            new Translation2d(2, 0),
+            new Translation2d(2.3, 0),
             new Translation2d(2.6, 0),
+            new Translation2d(3, 0),
             new Translation2d(3.2, 0),
+            // new Translation2d(3.3, 0),
             // left turn first
-            new Translation2d(3.4, 0.5), 
-            new Translation2d(3.4, 1.3), 
-            new Translation2d(3.4, 2),
-            new Translation2d(3.4, 2.7), 
-            new Translation2d(3.4, 3.4), 
-            new Translation2d(3.4, 3.87),
+            // new Translation2d(3.35, 0.1),
+           new Translation2d(3.4, 0.2),
+          //  new Translation2d(3.35, 0.3),
+          //   new Translation2d(3.36, 0.4),
+            // new Translation2d(3.39, 0.5),
+            // new Translation2d(3.59, 0.7),
+            // new Translation2d(3.69, 1.3), 
+            // new Translation2d(3.69, 2),
+            new Translation2d(3.7, 2.7), 
+            new Translation2d(3.65, 3.4), 
+            new Translation2d(3.6, 4.4),
             // left turn 2nd
-            new Translation2d(3.1, 3.87), 
-            new Translation2d(2.4, 3.87), 
-            new Translation2d(1.7, 3.87),
-            new Translation2d(1, 3.87)
+            // new Translation2d(3.5, 4.4), 
+            new Translation2d(3, 4.4), 
+            new Translation2d(2.7, 4.4), 
+            new Translation2d(2.5, 4.4), 
+            new Translation2d(1.7, 4.4),
+            new Translation2d(1, 4.4)
 
         // stop*/ss
         ), 
-        new Pose2d(0.5, 3.87, new Rotation2d(Math.PI)), 
+        new Pose2d(1.15, 4.4, new Rotation2d(Math.PI)), 
         new TrajectoryConfig(1.5, 1.5));
 
     m_trajectoryB = TrajectoryGenerator.generateTrajectory(
