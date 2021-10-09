@@ -14,6 +14,7 @@ public class shooter_Ian {
     private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(4);
   //  motor controllers
     private final WPI_TalonFX m_Shooter = new WPI_TalonFX(21);
+    private final WPI_TalonFX m_filterMotor = new WPI_TalonFX(22);
     
 
   public shooter_Ian() {
@@ -41,6 +42,13 @@ public class shooter_Ian {
   public void teleopPeriodic() {
     boolean isPressed = m_controller.getAButton();
     double speed = 0;
+    double loaderSpeed = 0;
+
+    if(m_controller.getXButton()){
+      loaderSpeed = 0.1;
+
+    }
+
     if(isPressed){
       speed = 0.3;
     }
@@ -49,7 +57,7 @@ public class shooter_Ian {
     }
 
    m_Shooter.set(ControlMode.PercentOutput, m_speedLimiter.calculate(speed));
-   
+   m_filterMotor.set(ControlMode.PercentOutput, loaderSpeed);
 
   }
 
