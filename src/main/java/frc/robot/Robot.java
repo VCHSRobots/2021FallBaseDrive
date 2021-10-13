@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
@@ -34,6 +35,7 @@ public class Robot extends TimedRobot {
   private Trajectory m_trajectory;
 
   private VisionServer mVisionServer = VisionServer.getInstance();
+  private double goalTS;
 
   @Override
   public void robotInit() {
@@ -48,7 +50,7 @@ public class Robot extends TimedRobot {
           new Translation2d(8, 5)
           ), 
         new Pose2d(2, 5, new Rotation2d(Math.PI)), 
-        new TrajectoryConfig(1, 1)
+        new TrajectoryConfig(5, 4)
       );
   }
 
@@ -64,11 +66,16 @@ public class Robot extends TimedRobot {
     m_timer.start();
     var pose=m_trajectory.getInitialPose();
     m_drive.resetOdometry(pose);
+    goalTS=0;
   }
 
   @Override
   public void autonomousPeriodic() {
     double elapsed = m_timer.get();
+    if (elapsed-goalTS>8){
+      m_drive.targetX+=1;
+      goalTS=elapsed;
+    }
     Trajectory.State reference = m_trajectory.sample(elapsed);
     ChassisSpeeds speeds = m_ramsete.calculate(m_drive.getPose(), reference);
 
@@ -107,6 +114,10 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledInit() {
+    m_timer.reset();
+    var pose=m_trajectory.getInitialPose();
+    m_drive.resetOdometry(pose);
+    m_drive.setSpeeds(new DifferentialDriveWheelSpeeds());
     System.out.println("Disabled init-----------");
   }
 
