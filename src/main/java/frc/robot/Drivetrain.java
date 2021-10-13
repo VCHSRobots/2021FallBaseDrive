@@ -54,6 +54,7 @@ public class Drivetrain {
   volatile private Socket m_socket;
 
   // 3 meters per second.
+  public static final boolean VisionEnabled=true;
   public static final double kMaxSpeed = 1.5;
   // 1/2 rotation per second.
   public static final double kMaxAngularSpeed = 2*Math.PI;
@@ -89,8 +90,8 @@ public class Drivetrain {
   private EncoderSim m_leftEncoderSim;
   private EncoderSim m_rightEncoderSim;
   private final Field2d m_fieldSim = new Field2d();
-  private final LinearSystem<N2, N2, N2> m_drivetrainSystem = LinearSystemId.identifyDrivetrainSystem(1.5, 0.14, 1.5,
-       0.2);
+  private final LinearSystem<N2, N2, N2> m_drivetrainSystem = LinearSystemId.identifyDrivetrainSystem(1.98, 0.2, 1.5,
+       0.3);
   private final DifferentialDrivetrainSim m_drivetrainSimulator = new DifferentialDrivetrainSim(m_drivetrainSystem, 
        DCMotor.getFalcon500(1), 50.0/12.0, kTrackWidth, kWheelRadius, null);
 
@@ -167,7 +168,7 @@ public class Drivetrain {
    */
   @SuppressWarnings("ParameterName")
   public void drive(double xSpeed, double rot) {
-    if (Robot.isSimulation()){
+    if (VisionEnabled){
       var t=mVisionServer.getTarget();
       if (t!=null && t.isValid()){
         var tlist=t.getTargets();
@@ -232,6 +233,9 @@ public class Drivetrain {
     SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
     angle.set(-m_drivetrainSimulator.getHeading().getDegrees());
 
+    if (!VisionEnabled){
+      return;
+    }
     var mypose = this.getPose();
     var dx=mypose.getX()-targetX;
     var dy=mypose.getY()-targetY;
