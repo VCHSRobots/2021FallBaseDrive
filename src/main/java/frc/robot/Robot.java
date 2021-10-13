@@ -22,8 +22,8 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
 import frc.vision.VisionServer;
 import java.util.List;
-
-import javax.swing.tree.TreePath;
+ 
+//import javax.swing.tree.TreePath;
 
 public class Robot extends TimedRobot {
   private final XboxController m_controller = new XboxController(0);
@@ -49,9 +49,13 @@ public class Robot extends TimedRobot {
   public NetworkTableEntry ntAutoA = table.getEntry("AutoA");
   public NetworkTableEntry ntAutoB = table.getEntry("AutoB");
   public NetworkTableEntry ntAutoC = table.getEntry("AutoC");
+  public NetworkTableEntry ntTimeTaken = table.getEntry("Time Taken");
   private boolean isAChecked = false;
   private boolean isBChecked = false;
   private boolean isCChecked = false;
+  private boolean isADone = true;
+  private boolean isBDone = true;
+  private boolean isCDone = true;
 
   @Override
   public void robotInit() {
@@ -63,6 +67,8 @@ public class Robot extends TimedRobot {
     ntAutoA.setBoolean(true);
     ntAutoB.setBoolean(false);
     ntAutoC.setBoolean(false);
+
+    ntTimeTaken.setNumber(0);
 
     m_trajectory = TrajectoryGenerator.generateTrajectory(
         new Pose2d(0, 0, new Rotation2d(0)),
@@ -79,51 +85,98 @@ public class Robot extends TimedRobot {
           // first turn left
           new Translation2d(2, 0),
           new Translation2d(2.5, 0),
+          new Translation2d(2.9, 0),
+          new Translation2d(3.1, 0.1),
+          new Translation2d(3.2, 0.3),
           // going straight
-          new Translation2d(2.8, 0.5),
-          new Translation2d(2.8, 1),
-          new Translation2d(2.8, 1.5),
-          new Translation2d(2.8, 2),
-          new Translation2d(2.8, 2.5),
-          new Translation2d(2.8, 2.7),
-          new Translation2d(2.8, 2.9),
-          new Translation2d(2.8, 3.075),
-          new Translation2d(2.8, 3.3),
-          new Translation2d(2.8, 3.575),
-          new Translation2d(2.3, 3.8),
-          new Translation2d(2, 3.8),
-          new Translation2d(1.8, 3.8),
+          new Translation2d(3.3, 0.6),
+          new Translation2d(3.3, 1),
+          new Translation2d(3.3, 1.5),
+          new Translation2d(3.3, 2),
+          new Translation2d(3.3, 2.5),
+          new Translation2d(3.5, 3.6),
+          new Translation2d(3.5, 4.3),
+          new Translation2d(3.2, 4.3),
+          new Translation2d(3, 4.3),
           // second turn left
-          new Translation2d(1.75, 3.8),
-          new Translation2d(1.5, 3.8),
-          new Translation2d(1.25, 3.8),
-          new Translation2d(1, 3.8),
-          new Translation2d(.75, 3.8)
+          new Translation2d(2.7, 4.3),
+          new Translation2d(2.3, 4.3),
+          new Translation2d(2, 4.3),
+          new Translation2d(1.8, 4.3),
+          new Translation2d(1.5, 4.3),
+          new Translation2d(1.25, 4.3),
+          new Translation2d(1, 4.3),
+          new Translation2d(0.75, 4.3)
           ), 
-        new Pose2d(0.6, 3.8, new Rotation2d(Math.PI)), 
-        new TrajectoryConfig(2.5, 3)
+        new Pose2d(0.595, 4.3, new Rotation2d(Math.PI)), 
+        new TrajectoryConfig(1, 3)
       );
-  
 
-    m_trajectoryB = TrajectoryGenerator.generateTrajectory(
-      new Pose2d(0, 0, new Rotation2d(0)),
-      List.of(
-        new Translation2d(2, 2),
-        new Translation2d(0, 0)
-        ), 
-      new Pose2d(3, 1, new Rotation2d(Math.PI/2)), 
-      new TrajectoryConfig(1, 1)
+      m_trajectoryB = TrajectoryGenerator.generateTrajectory(
+        new Pose2d(0, 0, new Rotation2d(0)),
+        List.of(
+          // first turn left
+          new Translation2d(2, 0),
+          new Translation2d(2.5, 0),
+          new Translation2d(2.9, 0),
+          new Translation2d(3.1, 0.1),
+          new Translation2d(3.2, 0.3),
+          // going straight
+          new Translation2d(3.3, 0.6),
+          new Translation2d(3.3, 1),
+          new Translation2d(3.3, 1.5),
+          new Translation2d(3.3, 2),
+          new Translation2d(3.3, 2.5),
+          new Translation2d(3.6, 3.6),
+          new Translation2d(3.6, 4.3),
+          new Translation2d(3.2, 4.3),
+          new Translation2d(2.9, 4.3),
+          // second turn left
+          new Translation2d(2.7, 4.3),
+          new Translation2d(2.5, 4.3),
+          new Translation2d(2.3, 4.5),
+          new Translation2d(2, 4.5),
+          new Translation2d(1.8, 4.5),
+          new Translation2d(1.5, 4.5),
+          new Translation2d(1.25, 4.5),
+          new Translation2d(1, 4.5),
+          new Translation2d(0.75, 4.5)
+          ), 
+        new Pose2d(0.4, 4.5, new Rotation2d(Math.PI)), 
+        new TrajectoryConfig(2, 3)
       );
-  
 
-    m_trajectoryC = TrajectoryGenerator.generateTrajectory(
-      new Pose2d(0, 0, new Rotation2d(0)),
-      List.of(
-        new Translation2d(2, 1),
-        new Translation2d(3, 3)
-        ), 
-      new Pose2d(1, 4, new Rotation2d(Math.PI)), 
-      new TrajectoryConfig(1, 1)
+      m_trajectoryC = TrajectoryGenerator.generateTrajectory(
+        new Pose2d(0, 0, new Rotation2d(0)),
+        List.of(
+          // first turn left
+          new Translation2d(2, 0),
+          new Translation2d(2.5, 0),
+          new Translation2d(2.9, 0),
+          new Translation2d(3.1, 0.1),
+          new Translation2d(3.2, 0.3),
+          // going straight
+          new Translation2d(3.3, 0.6),
+          new Translation2d(3.3, 1),
+          new Translation2d(3.3, 1.5),
+          new Translation2d(3.3, 2),
+          new Translation2d(3.3, 2.5),
+          new Translation2d(3.5, 3.6),
+          new Translation2d(3.5, 4.3),
+          new Translation2d(3.2, 4.3),
+          new Translation2d(3, 4.3),
+          // second turn left
+          new Translation2d(2.7, 4.3),
+          new Translation2d(2.3, 4.3),
+          new Translation2d(2, 4.3),
+          new Translation2d(1.8, 4.3),
+          new Translation2d(1.5, 4.3),
+          new Translation2d(1.25, 4.3),
+          new Translation2d(1, 4.3),
+          new Translation2d(0.75, 4.3)
+          ), 
+        new Pose2d(0.595, 4.3, new Rotation2d(Math.PI)), 
+        new TrajectoryConfig(3, 3)
       );
   
     }
@@ -146,12 +199,15 @@ public class Robot extends TimedRobot {
 
     if (isAChecked) {
       pose=m_trajectory.getInitialPose();
+      isADone = false;
 
     } else if(isBChecked) {
       pose=m_trajectory.getInitialPose();
+      isBDone = false;
 
     } else if(isCChecked) {
       pose=m_trajectory.getInitialPose();
+      isCDone = false;
 
     }
     else {
@@ -184,6 +240,27 @@ public class Robot extends TimedRobot {
     } else {
       speeds = new ChassisSpeeds(0, 0, 0);
 
+    }
+
+    if (speeds.vxMetersPerSecond == 0) {
+      if(isADone == false || isBDone == false || isCDone == false) {
+        if(isAChecked) {
+          isADone = true;
+          System.out.println("Time taken (Route A): " + elapsed);
+          ntTimeTaken.setNumber(elapsed);
+        } else if(isBChecked) {
+          isBDone = true;
+          System.out.println("Time taken (Route B): " + elapsed);
+          ntTimeTaken.setNumber(elapsed);
+        } else if(isCChecked) {
+          isCDone = true;
+          System.out.println("Time taken (Route C): " + elapsed);
+          ntTimeTaken.setNumber(elapsed);
+        } else {
+  
+        }
+      }
+      
     }
 
       m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
