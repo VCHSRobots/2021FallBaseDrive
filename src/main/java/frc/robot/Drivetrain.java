@@ -168,19 +168,7 @@ public class Drivetrain {
    */
   @SuppressWarnings("ParameterName")
   public void drive(double xSpeed, double rot) {
-    if (VisionEnabled){
-      var t=mVisionServer.getTarget();
-      if (t!=null && t.isValid()){
-        var tlist=t.getTargets();
-        if (tlist.size()>0){
-          var y=tlist.get(0).getY();
-          var z=tlist.get(0).getZ();
-          setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds((1.2-z)*3, 0, y)));
-        }
-      }
-    }else{
-      setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0, rot)));
-    }
+    setSpeeds(m_kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0, rot)));
   }
 
   /** Update robot odometry. */
@@ -233,6 +221,8 @@ public class Drivetrain {
     SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
     angle.set(-m_drivetrainSimulator.getHeading().getDegrees());
 
+
+    // vision stuff below this check
     if (!VisionEnabled){
       return;
     }

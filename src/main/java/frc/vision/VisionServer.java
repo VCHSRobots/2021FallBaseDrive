@@ -47,6 +47,20 @@ public class VisionServer extends CrashTrackingRunnable {
         return this.currentTarget;
     }
 
+    public double[] getFirstTargetYZ() {
+        var targetObj = this.getTarget();
+        double[] arr = null;
+        if (targetObj != null && targetObj.isValid()){
+            var targetList=targetObj.getTargets();
+            if (targetList.size()>0){
+                var y=targetList.get(0).getY();
+                var z=targetList.get(0).getZ();
+                arr = new double[]{y,z};
+            }
+        }
+        return arr;
+    }
+
     public static VisionServer getInstance() {
         if (s_instance == null) {
             s_instance = new VisionServer(kAndroidAppTcpPort);
@@ -86,7 +100,7 @@ public class VisionServer extends CrashTrackingRunnable {
         public void handleMessage(VisionMessage message, double timestamp) {
             if ("targets".equals(message.getType())) {
                 VisionServer.this.setTarget(VisionUpdate.generateFromJsonString(timestamp, message.getMessage()));
-                System.out.printf("got message %s\n",message);
+                // System.out.printf("got message %s\n",message);
                 /*
                 receivers.removeAll(Collections.singleton(null));
                 if (update.isValid()) {
@@ -118,10 +132,10 @@ public class VisionServer extends CrashTrackingRunnable {
                     double timestamp = getTimestamp();
                     lastMessageReceivedTime = timestamp;
                     String messageRaw = new String(buffer, 0, read);
-                    System.out.printf("%s",messageRaw);
+                    // System.out.printf("%s",messageRaw);
                     String[] messages = messageRaw.split("\n");
                     for (String message : messages) {
-                        System.out.printf("%s--\n",message);
+                        // System.out.printf("%s--\n",message);
                         OffWireMessage parsedMessage = new OffWireMessage(message);
                         if (parsedMessage.isValid()) {
                             handleMessage(parsedMessage, timestamp);
