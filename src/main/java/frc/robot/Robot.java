@@ -9,9 +9,11 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.SlewRateLimiter;
+import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.controller.RamseteController;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
@@ -23,17 +25,16 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
 import frc.vision.VisionServer;
 import java.util.List;
 
-import javax.swing.tree.TreePath;
-
 public class Robot extends TimedRobot {
   private final XboxController m_controller = new XboxController(0);
 
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0
   // to 1.
-  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(5);
-  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(5);
+  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
+  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(7);
 
-  private Drivetrain m_drive=new Drivetrain();
+  private Drivetrain m_drive = new Drivetrain();
+  private Shooter m_shooter = new Shooter();
   private final RamseteController m_ramsete = new RamseteController();
   private final Timer m_timer = new Timer();
   
@@ -49,20 +50,28 @@ public class Robot extends TimedRobot {
   public NetworkTableEntry ntAutoA = table.getEntry("AutoA");
   public NetworkTableEntry ntAutoB = table.getEntry("AutoB");
   public NetworkTableEntry ntAutoC = table.getEntry("AutoC");
+  public NetworkTableEntry ntTimeTaken = table.getEntry("Time Taken");
   private boolean isAChecked = false;
   private boolean isBChecked = false;
   private boolean isCChecked = false;
+  private boolean isADone = true;
+  private boolean isBDone = true;
+  private boolean isCDone = true;
+  private String robotMode = "normal";
 
   @Override
   public void robotInit() {
     // Flush NetworkTables every loop. This ensures that robot pose and other values
     // are sent during every iteration.
     System.out.println("RobotInit-----------");
+    m_shooter.robotInit();
     setNetworkTablesFlushEnabled(true);
     
     ntAutoA.setBoolean(true);
     ntAutoB.setBoolean(false);
     ntAutoC.setBoolean(false);
+
+    ntTimeTaken.setNumber(0);
 
     m_trajectory = TrajectoryGenerator.generateTrajectory(
         new Pose2d(0, 0, new Rotation2d(0)),
@@ -130,6 +139,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     m_drive.periodic();
+    m_shooter.robotPeriodic();
   }
 
   @Override
@@ -141,18 +151,21 @@ public class Robot extends TimedRobot {
     isAChecked = ntAutoA.getBoolean(false);
     isBChecked = ntAutoB.getBoolean(false);
     isCChecked = ntAutoC.getBoolean(false);
+    isADone = true;
+    isBDone = true;
+    isCDone = true;
 
     Pose2d pose;
 
     if (isAChecked) {
       pose=m_trajectory.getInitialPose();
-
+      isADone = false;
     } else if(isBChecked) {
       pose=m_trajectory.getInitialPose();
-
+      isBDone = false;
     } else if(isCChecked) {
       pose=m_trajectory.getInitialPose();
-
+      isCDone = false;
     }
     else {
       pose = m_drive.getPose();
@@ -183,16 +196,30 @@ public class Robot extends TimedRobot {
 
     } else {
       speeds = new ChassisSpeeds(0, 0, 0);
+    }
+
+    if(speeds.vxMetersPerSecond == 0) {
+
+      if(isADone == false || isBDone == false || isCDone == false) {
+        if (isAChecked) {
+          isADone = true;
+          System.out.println("Time taken (Route A): " + elapsed);
+          ntTimeTaken.setNumber(elapsed);
+        } else if(isBChecked) {
+          isBDone = true;
+          System.out.println("Time taken (Route B): " + elapsed);
+          ntTimeTaken.setNumber(elapsed);
+        } else if(isCChecked) {
+          isCDone = true;
+          System.out.println("Time taken (Route C): " + elapsed);
+          ntTimeTaken.setNumber(elapsed);
+        } else {
+        }
+      }
 
     }
 
-      m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
-
-
-    // System.out.println(reference.toString());
-    // System.out.println(m_drive.getPose());
-    // System.out.println(speeds.toString());
-
+    m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
   }
 
   @Override
@@ -211,34 +238,21 @@ public class Robot extends TimedRobot {
     double rot = -m_rotLimiter.calculate(temp_x_right) * Drivetrain.kMaxAngularSpeed;
     m_drive.drive(xSpeed, rot);
 
-    boolean buttonYPressed;
-    boolean buttonXPressed;
+    //speeds/slows robot
+    // if(m_controller.getYButtonPressed()) {
+    //   if(robotMode == "normal") {
+    //     Drivetrain.kMaxSpeed = 6;
+    //     Drivetrain.kMaxAngularSpeed = 4*Math.PI;
+    //     robotMode = "fast";
+    //   } else {
+    //     Drivetrain.kMaxSpeed = 3;
+    //     Drivetrain.kMaxAngularSpeed = 2*Math.PI;
+    //     robotMode = "normal";
+    //   }
+    // }
 
-    if(m_controller.getYButtonPressed()) {
-      buttonYPressed = true;
-      if(buttonYPressed) {
-
-        Drivetrain.kMaxSpeed = 6;
-
-        Drivetrain.kMaxAngularSpeed = 5*Math.PI;
-        buttonYPressed = false;
-
-      }
-    }
-
-    if(m_controller.getXButtonPressed()) {
-      buttonXPressed = true;
-      if(buttonXPressed) {
-
-        Drivetrain.kMaxSpeed = 3;
-
-        Drivetrain.kMaxAngularSpeed = 2*Math.PI;
-        buttonYPressed = false;
-
-      }
-    }
-
-
+    
+    m_shooter.teleopPeriodic();
   }
 
   @Override

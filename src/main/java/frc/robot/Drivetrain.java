@@ -50,7 +50,7 @@ public class Drivetrain {
 
   // 3 meters per second.
   public boolean isSimulation;
-  public static double kMaxSpeed = 3;
+  public static double kMaxSpeed = 1.25;
   // 1/2 rotation per second.
   public static double kMaxAngularSpeed = 2*Math.PI;
 
