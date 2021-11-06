@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 
+/** Add your docs here. */
 public class Shooter {
 
   private ShuffleboardTab shooterTab = Shuffleboard.getTab("shooter");
