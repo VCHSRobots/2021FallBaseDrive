@@ -1,5 +1,5 @@
 package frc.vision.messages;
-
+ 
 /**
  * A message that acts as a "heartbeat"- ensures that the vision system is working. The message simply contains the
  * instance of the VisionServer object.
