@@ -7,7 +7,6 @@ package frc.robot;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
@@ -68,6 +67,8 @@ public class shooter_Ian {
   }
 
   public void robotInit() {
+
+// SHUFFLEBOARD!!!!!!!!!!!!!!!!!!
     ShootMotorTab = Shuffleboard.getTab("Shooter Output");
     ntShootMotorOutput = ShootMotorTab.add("Shoot Motor Output Percent", 0).withPosition(3, 4).withSize(2, 1)
         .withWidget(BuiltInWidgets.kDial).getEntry();
@@ -139,6 +140,7 @@ public class shooter_Ian {
   }
 
   public void teleopPeriodic() {
+    // SPEED!!!!!!!
     double shootSpeed = 0;
     double loaderSpeed = 0;
     boolean loaderToggle = false;
@@ -150,6 +152,7 @@ public class shooter_Ian {
    
 
    // System.out.println(toplimitSwitch.get());
+   // LOADER MOTOR !!!!!!!!!
     if (m_controller.getTriggerAxis(Hand.kLeft) > 0.05) {
     loaderSpeed = 0.40;
     }
@@ -157,7 +160,7 @@ public class shooter_Ian {
       loaderSpeed = 0;
     }
     
-  
+  // TILT MOTOR
     if(m_controller.getBackButton()){
       tiltSpeed = -0.2;
     }
@@ -172,7 +175,7 @@ public class shooter_Ian {
       filterSpeed = 0.1;
    } */
 
-   // tilt start & end
+   // TURN TABLE SPEED
    if(m_controller.getBumper(Hand.kLeft)){
      turntableSpeed = -0.25;
    }
@@ -207,12 +210,15 @@ public class shooter_Ian {
       tiltSpeed = 0;
     }
     */
+    // SHOOT MOTOR
     if (Math.abs(m_controller.getTriggerAxis(Hand.kRight)) > 0.05) {
       shootSpeed = Math.abs(m_controller.getTriggerAxis(Hand.kRight));
     }
     if(m_controller.getAButton()){
       shootSpeed = -0.2;
     }
+
+    // SET MOTOR TO DOUBLES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     m_shootMotor.set(ControlMode.PercentOutput, -m_shootLimiter.calculate(shootSpeed));
     //m_filterMotor.set(ControlMode.PercentOutput, m_filterLimiter.calculate(filterSpeed));
     m_loadMotor.set(-m_loadLimiter.calculate(loaderSpeed));
