@@ -35,6 +35,9 @@ public class Robot extends TimedRobot {
   private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(5);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(5);
 
+
+
+  private shooter_Ian m_Shooter = new shooter_Ian();
   private Drivetrain m_drive=new Drivetrain();
   private final RamseteController m_ramsete = new RamseteController();
   private final Timer m_timer = new Timer();
@@ -68,11 +71,14 @@ public class Robot extends TimedRobot {
     // are sent during every iteration.
     System.out.println("RobotInit-----------");
     setNetworkTablesFlushEnabled(true);
+    m_Shooter.robotInit();
 
     ntAutoA.setBoolean(true);
     ntAutoB.setBoolean(false);
     ntAutoC.setBoolean(false);
     ntAutoD.setBoolean(false);
+
+    
 
 
     ntTimeTaken.setNumber(0);
@@ -171,13 +177,13 @@ public class Robot extends TimedRobot {
           new Translation2d(2.3, 0),
           new Translation2d(2.6, 0),
           new Translation2d(3, 0),
-          new Translation2d(3.2, 0),
+         new Translation2d(3.2, 0),
          new Translation2d(3.4, 0.2),
            new Translation2d(3.59, 0.7),
            new Translation2d(3.69, 1.3),
            new Translation2d(3.69, 2),
-          new Translation2d(3.7, 2.7), 
-          new Translation2d(3.8, 3.4), 
+          new Translation2d(3.7, 2.7),
+          new Translation2d(3.8, 3.4),
           new Translation2d(3.8, 4.6),
           // left turn 2nd
           new Translation2d(3.6, 4.72), 
@@ -227,6 +233,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     m_drive.periodic();
+    m_Shooter.robotPeriodic();
   }
 
   @Override
@@ -351,6 +358,8 @@ public class Robot extends TimedRobot {
     double temp_x_right = util.deadband(m_controller.getX(GenericHID.Hand.kRight), 0.15);
     double rot = -m_rotLimiter.calculate(temp_x_right) * Drivetrain.kMaxAngularSpeed;
     m_drive.drive(xSpeed, rot);
+
+    m_Shooter.teleopPeriodic();
   }
 
   @Override
