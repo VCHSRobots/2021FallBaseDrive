@@ -36,27 +36,24 @@ public class Robot extends TimedRobot {
   private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(5);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(5);
 
+  // vision controller
+  private visionController m_visionController = new visionController();
+  private VisionServer mVisionServer = VisionServer.getInstance();
+
+  // drive train
   private Drivetrain m_drive = new Drivetrain();
   private final RamseteController m_ramsete = new RamseteController();
   private final Timer m_timer = new Timer();
   private Trajectory m_trajectory;
 
-  private VisionServer mVisionServer = VisionServer.getInstance();
-  private double[] mostRecentTargetYZ = null;
-  private PIDController m_visionPIDomega = new PIDController(20, 0, 700, 0.02);
-  private PIDController m_visionPIDvx = new PIDController(7, 0, 240, 0.02);
   private ShuffleboardTab stRobot = Shuffleboard.getTab("Robot");
   private NetworkTableEntry ntPoseX = stRobot.add("PoseX", 0).getEntry();
   private NetworkTableEntry ntPoseOmega = stRobot.add("PoseOmega", 0).getEntry();
-  private NetworkTableEntry ntTargetX = stRobot.add("TargetX", 0).getEntry();
-  private NetworkTableEntry ntTargetOmega = stRobot.add("TargetOmega", 0).getEntry();
-  private NetworkTableEntry ntVisionY = stRobot.add("VisionY",0).getEntry();
-  private NetworkTableEntry ntVisionZ = stRobot.add("VisionZ",0).getEntry();
-  private NetworkTableEntry ntVisionValid = stRobot.add("Vision Valid", false).getEntry();
   private NetworkTableEntry ntOmegaPIDout = stRobot.add("Omega PID out", 0).getEntry();
   private NetworkTableEntry ntVxPIDout = stRobot.add("Vx PID out", 0).getEntry();
-  private double m_pidOut = 0;
-  private double m_vxpidOut = 0;
+  private NetworkTableEntry ntTargetX = stRobot.add("TargetX", 0).getEntry();
+  private NetworkTableEntry ntTargetOmega = stRobot.add("TargetOmega", 0).getEntry();
+  
   private double goalTS;
 
   @Override
@@ -64,13 +61,9 @@ public class Robot extends TimedRobot {
     // Flush NetworkTables every loop. This ensures that robot pose and other values
     // are sent during every iteration.
     System.out.println("RobotInit-----------");
-    setNetworkTablesFlushEnabled(true);
+    m_visionController.robotInit();
 
-    //vision
-    m_visionPIDomega.setSetpoint(0);
-    m_visionPIDomega.setTolerance(0.03);
-    m_visionPIDvx.setTolerance(0.015);
-    
+    setNetworkTablesFlushEnabled(true);
 
     m_trajectory = TrajectoryGenerator.generateTrajectory(
         new Pose2d(2, 2, new Rotation2d(0)),
@@ -86,36 +79,22 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     m_drive.periodic();
-    double[] tmpTarget = mVisionServer.getFirstTargetYZ();
-    if (tmpTarget == null) {
-      // no valid target
-      ntVisionValid.setBoolean(false);
-    }
-    else {
-      mostRecentTargetYZ = tmpTarget;
-      // calculate pid on Z, horizontal error
-      ntVisionValid.setBoolean(true);
-      ntVisionY.setNumber(mostRecentTargetYZ[0]);
-      ntVisionZ.setNumber(mostRecentTargetYZ[1]);
+    m_visionController.robotPeriodic();
+    Pose2d pose = m_drive.getPose();
+    ntPoseX.setNumber(pose.getX());
+    ntPoseOmega.setNumber(pose.getRotation().getRadians());
+    Pose2d target = m_visionController.getTargetPoseFromFirst(pose);
+    ntTargetOmega.setNumber(target.getRotation().getRadians());
+    ntOmegaPIDout.setNumber(m_visionController.rotationPIDCalculate(
+                            pose.getRotation().getRadians(), 
+                            target.getRotation().getRadians()
+                            ));
+    // ntTargetX.setNumber(target.getTranslation().getDistance(other))
+    ntVxPIDout.setNumber(m_visionController.vxPIDCalculate(
+                          mVisionServer.getFirstTargetYZ()[0], 0
+                          ));
 
-      // copied from drive()
-      double delta_rad = mostRecentTargetYZ[1]; // get Horizontal when phone is veritcal
-      Pose2d target = m_drive.getPose().transformBy(new Transform2d(new Translation2d(0, 0), new Rotation2d(delta_rad)));
-      ntTargetOmega.setNumber(target.getRotation().getRadians());
-      ntOmegaPIDout.setNumber(m_visionPIDomega.calculate(m_drive.getPose().getRotation().getRadians(), target.getRotation().getRadians()));
-
-      double delta_y = mostRecentTargetYZ[0]; // get Horizontal when phone is veritcal
-      // double delta_meters = (delta_y + 0.23) * 4.6; // roughly 4.6 meters / normallized screen units
-      // var t = new Translation2d(delta_meters, m_drive.getPose().getRotation());
-      // Pose2d target = m_drive.getPose().transformBy(new Transform2d(t, new Rotation2d()));
-      // m_vxpidOut = -1*m_visionPIDvx.calculate(m_drive.getPose().getTranslation().getDistance(target.getTranslation()), 0);
-      m_vxpidOut = -1*m_visionPIDvx.calculate(delta_y, -0.23);
-      // ntTargetX.setNumber(targetx.getX());
-      ntVxPIDout.setNumber(m_vxpidOut);
-    }
-    ntPoseX.setNumber(m_drive.getPose().getX());
-    ntPoseOmega.setNumber(m_drive.getPose().getRotation().getRadians());
-
+    
     
   }
 
@@ -155,70 +134,24 @@ public class Robot extends TimedRobot {
   @Override
   @SuppressWarnings("LocalVariableName")
   public void teleopPeriodic() {
-    // if A button then joystick control, else vision
+    // if A button vision, B button, X button, vision, else joystick axis
     if (m_controller.getAButton()) {
       // vision control
       // assuming 5 degree = 0.43 screen units
       // double delta_rad = Math.toRadians(mVisionServer.getFirstTargetYZ()[1] * (5.0 / 0.43)); // from 
       // assuming output from camera is radians
-      ChassisSpeeds speeds;
-      if (m_visionPIDomega.atSetpoint()) {
-        speeds = new ChassisSpeeds(0,0,0);
-      }
-      else if (mVisionServer.getFirstTargetYZ() == null){
-        speeds = new ChassisSpeeds(0,0,0);
-      }
-      else {
-        double delta_rad = mostRecentTargetYZ[1]; // get Horizontal when phone is veritcal
-        Pose2d target = m_drive.getPose().transformBy(new Transform2d(new Translation2d(0, 0), new Rotation2d(delta_rad)));
-        m_pidOut = m_visionPIDomega.calculate(m_drive.getPose().getRotation().getRadians(), target.getRotation().getRadians());
-        speeds = new ChassisSpeeds(0,0,m_pidOut);
-      }
-
-      m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
-
+      ChassisSpeeds speeds = m_visionController.getChassisSpeedsFromFirst(m_drive.getPose());
+      m_drive.drive(0, speeds.omegaRadiansPerSecond);
     }
     else if (m_controller.getBButton()) {
-      ChassisSpeeds speeds;
-      if (m_visionPIDvx.atSetpoint()) {
-        speeds = new ChassisSpeeds(0,0,0);
-      }
-      else if (mVisionServer.getFirstTargetYZ() == null){
-        speeds = new ChassisSpeeds(0,0,0);
-      }
-      else {
-        double delta_y = mostRecentTargetYZ[0]; // get Horizontal when phone is veritcal
-        // double delta_meters = (delta_y + 0.23) * 4.6; // roughly 4.6 meters / normallized screen units
-        // var t = new Translation2d(delta_meters, m_drive.getPose().getRotation());
-        // Pose2d target = m_drive.getPose().transformBy(new Transform2d(t, new Rotation2d()));
-        // m_vxpidOut = -1*m_visionPIDvx.calculate(m_drive.getPose().getTranslation().getDistance(target.getTranslation()), 0);
-        m_vxpidOut = -1*m_visionPIDvx.calculate(delta_y, -0.23);
-        speeds = new ChassisSpeeds(m_vxpidOut,0,0);
-      }
-      m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
+      // vision controll
+      // only drives fwd / back
+      ChassisSpeeds speeds = m_visionController.getChassisSpeedsFromFirst(m_drive.getPose());
+      m_drive.drive(speeds.vxMetersPerSecond, 0);
     }
     else if (m_controller.getXButton()) {
-      ChassisSpeeds speeds;
-      if (m_visionPIDvx.atSetpoint() && m_visionPIDomega.atSetpoint()) {
-        speeds = new ChassisSpeeds(0,0,0);
-      }
-
-      else if (mVisionServer.getFirstTargetYZ() == null){
-        speeds = new ChassisSpeeds(0,0,0);
-      }
-      else {
-        double delta_rad = mostRecentTargetYZ[1]; // get Horizontal when phone is veritcal
-        Pose2d target = m_drive.getPose().transformBy(new Transform2d(new Translation2d(0, 0), new Rotation2d(delta_rad)));
-        m_pidOut = m_visionPIDomega.calculate(m_drive.getPose().getRotation().getRadians(), target.getRotation().getRadians());
-
-        double delta_y = mostRecentTargetYZ[0];
-        m_vxpidOut = -1*m_visionPIDvx.calculate(delta_y, -0.23);
-
-        speeds = new ChassisSpeeds(m_vxpidOut,0,m_pidOut);
-      }
-
+      ChassisSpeeds speeds = m_visionController.getChassisSpeedsFromFirst(m_drive.getPose());
       m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
-
     }
     else {
       // Get the x speed. We are inverting this because Xbox controllers return
