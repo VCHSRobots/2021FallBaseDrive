@@ -17,6 +17,8 @@ import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
@@ -44,7 +46,16 @@ public class Robot extends TimedRobot {
   private Trajectory m_trajectoryC;
   private Trajectory m_trajectoryD;
 
+  private visionController m_visionController = new visionController();
   private VisionServer mVisionServer = VisionServer.getInstance();
+
+  private ShuffleboardTab stRobot = Shuffleboard.getTab("Robot");
+  private NetworkTableEntry ntPoseX = stRobot.add("PoseX", 0).getEntry();
+  private NetworkTableEntry ntPoseOmega = stRobot.add("PoseOmega", 0).getEntry();
+  private NetworkTableEntry ntOmegaPIDout = stRobot.add("Omega PID out", 0).getEntry();
+  private NetworkTableEntry ntVxPIDout = stRobot.add("Vx PID out", 0).getEntry();
+  private NetworkTableEntry ntTargetX = stRobot.add("TargetX", 0).getEntry();
+  private NetworkTableEntry ntTargetOmega = stRobot.add("TargetOmega", 0).getEntry();
 
   public NetworkTableInstance instance = NetworkTableInstance.getDefault();
   public NetworkTable table = instance.getTable("/auto");
@@ -68,6 +79,7 @@ public class Robot extends TimedRobot {
     // are sent during every iteration.
     System.out.println("RobotInit-----------");
     setNetworkTablesFlushEnabled(true);
+    m_visionController.robotInit();
 
     ntAutoA.setBoolean(true);
     ntAutoB.setBoolean(false);
@@ -227,6 +239,21 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     m_drive.periodic();
+
+    m_visionController.robotPeriodic();
+    Pose2d pose = m_drive.getPose();
+    ntPoseX.setNumber(pose.getX());
+    ntPoseOmega.setNumber(pose.getRotation().getRadians());
+    Pose2d target = m_visionController.getTargetPoseFromFirst(pose);
+    ntTargetOmega.setNumber(target.getRotation().getRadians());
+    ntOmegaPIDout.setNumber(m_visionController.rotationPIDCalculate(
+                            pose.getRotation().getRadians(), 
+                            target.getRotation().getRadians()
+                            ));
+    // ntTargetX.setNumber(target.getTranslation().getDistance(other))
+    ntVxPIDout.setNumber(m_visionController.vxPIDCalculate(
+                          mVisionServer.getFirstTargetYZ()[0], 0
+                          ));
   }
 
   @Override
@@ -235,16 +262,15 @@ public class Robot extends TimedRobot {
     m_timer.reset();
     m_timer.start();
 
-
-     isAChecked = ntAutoA.getBoolean(false);
-     isBChecked = ntAutoB.getBoolean(false);
-     isCChecked = ntAutoC.getBoolean(false);
-     isDChecked = ntAutoD.getBoolean(false);
-     isADone = true;
-     isBDone = true;
-     isCDone = true;
-     isDDone = true;
-     Pose2d pose;
+    isAChecked = ntAutoA.getBoolean(false);
+    isBChecked = ntAutoB.getBoolean(false);
+    isCChecked = ntAutoC.getBoolean(false);
+    isDChecked = ntAutoD.getBoolean(false);
+    isADone = true;
+    isBDone = true;
+    isCDone = true;
+    isDDone = true;
+    Pose2d pose;
 
     if (isAChecked){
       pose=m_trajectoryA.getInitialPose();
@@ -324,12 +350,7 @@ public class Robot extends TimedRobot {
       }
     }
     
-      
-      m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
-
-    
-  
-
+    m_drive.drive(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);
     // System.out.println(reference.toString());
     // System.out.println(m_drive.getPose());
     // System.out.println(speeds.toString());
@@ -337,20 +358,53 @@ public class Robot extends TimedRobot {
   }
 
   @Override
+  public void teleopInit() {
+    super.teleopInit();
+    m_timer.reset();
+  }
+
+  @Override
   @SuppressWarnings("LocalVariableName")
   public void teleopPeriodic() {
-    // Get the x speed. We are inverting this because Xbox controllers return
-    // negative values when we push forward.
-    double temp_y_left = util.deadband(m_controller.getY(GenericHID.Hand.kLeft), 0.15);
-    double xSpeed = -m_speedLimiter.calculate(temp_y_left) * Drivetrain.kMaxSpeed;
 
-    // Get the rate of angular rotation. We are inverting this because we want a
-    // positive value when we pull to the left (remember, CCW is positive in
-    // mathematics). Xbox controllers return positive values when you pull to
-    // the right by default.
-    double temp_x_right = util.deadband(m_controller.getX(GenericHID.Hand.kRight), 0.15);
-    double rot = -m_rotLimiter.calculate(temp_x_right) * Drivetrain.kMaxAngularSpeed;
+    /* DRIVE CODE */
+    // in all cases, set these 2 variables
+    double xSpeed = 0;
+    double rot = 0;
+
+    // TODO: change this button to what you what to press to aim
+    if (m_controller.getAButton()) {
+      // vision aim controls drive
+      // ROTATE ONLY
+      ChassisSpeeds speeds = m_visionController.getChassisSpeedsFromFirst(m_drive.getPose());
+      xSpeed = 0;
+      rot = speeds.omegaRadiansPerSecond;
+    }
+    // TODO: change this button to what you want to press
+    else if (m_controller.getBButton()) {
+      // vision aim rotate + fwd/back
+      // MOVES FWD/REV AND ROTATES
+      ChassisSpeeds speeds = m_visionController.getChassisSpeedsFromFirst(m_drive.getPose());
+      xSpeed = speeds.vxMetersPerSecond;
+      rot = speeds.omegaRadiansPerSecond;
+    }
+    else {
+      // Get the x speed. We are inverting this because Xbox controllers return
+      // negative values when we push forward.
+      double temp_y_left = util.deadband(m_controller.getY(GenericHID.Hand.kLeft), 0.15);
+      xSpeed = -m_speedLimiter.calculate(temp_y_left) * Drivetrain.kMaxSpeed;
+
+      // Get the rate of angular rotation. We are inverting this because we want a
+      // positive value when we pull to the left (remember, CCW is positive in
+      // mathematics). Xbox controllers return positive values when you pull to
+      // the right by default.
+      double temp_x_right = util.deadband(m_controller.getX(GenericHID.Hand.kRight), 0.15);
+      rot = -m_rotLimiter.calculate(temp_x_right) * Drivetrain.kMaxAngularSpeed;
+    }
+    // only call m_drive.drive() once. 
+    // use the xSpeed and rot variables to set the values
     m_drive.drive(xSpeed, rot);
+    /* END DRIVE CODE */
   }
 
   @Override
@@ -366,6 +420,8 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledInit() {
     System.out.println("Disabled init-----------");
+    m_timer.reset();
+    m_drive.drive(0, 0);
   }
 
 }
