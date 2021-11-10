@@ -18,7 +18,7 @@ public class OffWireMessage extends VisionMessage {
         try {
             JSONObject j = (JSONObject) parser.parse(message);
             mType = (String) j.get("type");
-            mMessage = (String) j.get("message");
+            mMessage = j.get("message").toString();
             mValid = true;
         } catch (ParseException e) {
         }
