@@ -50,7 +50,7 @@ public class Drivetrain {
 
   // 3 meters per second.
   public boolean isSimulation;
-  public static final double kMaxSpeed = 1.5;
+  public static final double kMaxSpeed = 1.425;
   // 1/2 rotation per second.
   public static final double kMaxAngularSpeed = 2*Math.PI;
 
@@ -94,8 +94,8 @@ public class Drivetrain {
     // resolution.
     m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d());
     if (Robot.isSimulation()){
-      m_leftEncoder = new Encoder(0, 1);
-      m_rightEncoder = new Encoder(2, 3);
+      m_leftEncoder = new Encoder(6, 7);
+      m_rightEncoder = new Encoder(8, 9);
       m_leftEncoderSim = new EncoderSim(m_leftEncoder);
       m_rightEncoderSim = new EncoderSim(m_rightEncoder);
       m_leftEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);

@@ -37,6 +37,9 @@ public class Robot extends TimedRobot {
   private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(5);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(5);
 
+
+
+  private shooter_Ian m_Shooter = new shooter_Ian();
   private Drivetrain m_drive=new Drivetrain();
   private final RamseteController m_ramsete = new RamseteController();
   private final Timer m_timer = new Timer();
@@ -80,11 +83,14 @@ public class Robot extends TimedRobot {
     System.out.println("RobotInit-----------");
     setNetworkTablesFlushEnabled(true);
     m_visionController.robotInit();
+    m_Shooter.robotInit();
 
     ntAutoA.setBoolean(true);
     ntAutoB.setBoolean(false);
     ntAutoC.setBoolean(false);
     ntAutoD.setBoolean(false);
+
+    
 
 
     ntTimeTaken.setNumber(0);
@@ -183,13 +189,13 @@ public class Robot extends TimedRobot {
           new Translation2d(2.3, 0),
           new Translation2d(2.6, 0),
           new Translation2d(3, 0),
-          new Translation2d(3.2, 0),
+         new Translation2d(3.2, 0),
          new Translation2d(3.4, 0.2),
            new Translation2d(3.59, 0.7),
            new Translation2d(3.69, 1.3),
            new Translation2d(3.69, 2),
-          new Translation2d(3.7, 2.7), 
-          new Translation2d(3.8, 3.4), 
+          new Translation2d(3.7, 2.7),
+          new Translation2d(3.8, 3.4),
           new Translation2d(3.8, 4.6),
           // left turn 2nd
           new Translation2d(3.6, 4.72), 
@@ -239,7 +245,6 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     m_drive.periodic();
-
     m_visionController.robotPeriodic();
     Pose2d pose = m_drive.getPose();
     ntPoseX.setNumber(pose.getX());
@@ -254,6 +259,8 @@ public class Robot extends TimedRobot {
     ntVxPIDout.setNumber(m_visionController.vxPIDCalculate(
                           mVisionServer.getFirstTargetYZ()[0], 0
                           ));
+
+    m_Shooter.robotPeriodic();
   }
 
   @Override
@@ -405,6 +412,7 @@ public class Robot extends TimedRobot {
     // use the xSpeed and rot variables to set the values
     m_drive.drive(xSpeed, rot);
     /* END DRIVE CODE */
+    m_Shooter.teleopPeriodic();
   }
 
   @Override
