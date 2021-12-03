@@ -114,7 +114,7 @@ public class Drivetrain {
     _drive_config.openloopRamp = 0.0;
     _drive_config.peakOutputForward = 1.0;
     _drive_config.peakOutputReverse = -1.0;
-    _drive_config.voltageCompSaturation = 11.0;
+    _drive_config.voltageCompSaturation = 9.0;
 
     m_leftLeader.configFactoryDefault();
     m_rightLeader.configFactoryDefault();

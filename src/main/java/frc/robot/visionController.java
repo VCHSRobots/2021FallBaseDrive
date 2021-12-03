@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Transform2d;
@@ -16,7 +17,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.vision.VisionServer;
 
 public class visionController {
-  
+  DigitalOutput VisionCamera = new DigitalOutput(0);
   private VisionServer mVisionServer = VisionServer.getInstance();
   private double[] mostRecentTargetYZ = {0, 1};
   private PIDController m_visionPIDomega = new PIDController(20, 0, 700, 0.02);
@@ -30,7 +31,7 @@ public class visionController {
   private double kMaxVxSpeed = 2.5;
   private double kMaxRotationSpeed = 3*Math.PI;
 
-  private double targetX_offset = -.23;
+  private double targetX_offset = 0.0;
   private double targetRot_offset = 0.0;
 
   /** Creates a new visionController. */
@@ -66,7 +67,7 @@ public class visionController {
   // returns target pose based on rotation
   // TODO: implement target pose based on vertical 
   public Pose2d getTargetPoseFromFirst(Pose2d starting_pose) {
-
+    //
     // copied from drive()
     double delta_rad = mostRecentTargetYZ[1] + targetRot_offset; // get Horizontal when phone is veritcal
     return starting_pose.transformBy(new Transform2d(new Translation2d(0, 0), new Rotation2d(delta_rad)));
@@ -75,13 +76,13 @@ public class visionController {
   // returns radians per second
   public double rotationPIDCalculate(double currentRadians, double setpointRadians) {
     var x = m_visionPIDomega.calculate(currentRadians,setpointRadians);
-    return (Math.abs(x) < kMaxRotationSpeed) ? x : Math.copySign(kMaxRotationSpeed, x);
+    return (Math.abs(x) < kMaxRotationSpeed) ? -x : Math.copySign(kMaxRotationSpeed, -x);
   }
 
   // returns m/s
   public double vxPIDCalculate(double currentXValue, double setpointXValue) {
     var x = m_visionPIDvx.calculate(currentXValue, setpointXValue + targetX_offset);
-    return (Math.abs(x) < kMaxVxSpeed) ? x : Math.copySign(kMaxVxSpeed, x);
+    return (Math.abs(x) < kMaxVxSpeed) ? -x : Math.copySign(kMaxVxSpeed, -x);
   }
 
   public ChassisSpeeds getChassisSpeedsFromFirst(Pose2d currentPose) {
@@ -102,4 +103,14 @@ public class visionController {
     }
     return speeds;
   }
+
+  public void turnLEDon(){
+    VisionCamera.set(true);
+  }
+
+  public void turnLEDoff(){
+    VisionCamera.set(false);
+  }
+ 
+
 }

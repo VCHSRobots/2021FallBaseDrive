@@ -34,7 +34,7 @@ public class Robot extends TimedRobot {
 
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0
   // to 1.
-  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(5);
+  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(2);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(5);
 
 
@@ -50,7 +50,7 @@ public class Robot extends TimedRobot {
   private Trajectory m_trajectoryD;
 
   private visionController m_visionController = new visionController();
-  private VisionServer mVisionServer = VisionServer.getInstance();
+  private VisionServer m_VisionServer = VisionServer.getInstance();
 
   private ShuffleboardTab stRobot = Shuffleboard.getTab("Robot");
   private NetworkTableEntry ntPoseX = stRobot.add("PoseX", 0).getEntry();
@@ -255,10 +255,10 @@ public class Robot extends TimedRobot {
                             pose.getRotation().getRadians(), 
                             target.getRotation().getRadians()
                             ));
-    // ntTargetX.setNumber(target.getTranslation().getDistance(other))
-    ntVxPIDout.setNumber(m_visionController.vxPIDCalculate(
-                          mVisionServer.getFirstTargetYZ()[0], 0
-                          ));
+    // ntTargetX.setNumber(target.getTranslation().getX());
+  //  ntVxPIDout.setNumber(m_visionController.vxPIDCalculate(
+   //                       m_VisionServer.getFirstTargetYZ()[0], 0
+  //                        ));
 
     m_Shooter.robotPeriodic();
   }
@@ -379,8 +379,15 @@ public class Robot extends TimedRobot {
     double xSpeed = 0;
     double rot = 0;
 
+    if(m_controller.getPOV(0) == 270){
+      m_visionController.turnLEDon();
+    }
+    if(m_controller.getPOV(0) == 90){
+      m_visionController.turnLEDoff();
+    }
+
     // TODO: change this button to what you what to press to aim
-    if (m_controller.getAButton()) {
+    if (m_controller.getYButton()) {
       // vision aim controls drive
       // ROTATE ONLY
       ChassisSpeeds speeds = m_visionController.getChassisSpeedsFromFirst(m_drive.getPose());
@@ -388,7 +395,7 @@ public class Robot extends TimedRobot {
       rot = speeds.omegaRadiansPerSecond;
     }
     // TODO: change this button to what you want to press
-    else if (m_controller.getBButton()) {
+    else if (m_controller.getXButton()) {
       // vision aim rotate + fwd/back
       // MOVES FWD/REV AND ROTATES
       ChassisSpeeds speeds = m_visionController.getChassisSpeedsFromFirst(m_drive.getPose());
@@ -410,7 +417,7 @@ public class Robot extends TimedRobot {
     }
     // only call m_drive.drive() once. 
     // use the xSpeed and rot variables to set the values
-    m_drive.drive(xSpeed, rot);
+    m_drive.drive(xSpeed, rot); 
     /* END DRIVE CODE */
     m_Shooter.teleopPeriodic();
   }
