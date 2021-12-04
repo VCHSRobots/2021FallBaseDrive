@@ -50,9 +50,9 @@ public class Drivetrain {
 
   // 3 meters per second.
   public boolean isSimulation;
-  public static final double kMaxSpeed = 1.425;
+  public static final double kMaxSpeed = 1.5;
   // 1/2 rotation per second.
-  public static final double kMaxAngularSpeed = 2*Math.PI;
+  public static final double kMaxAngularSpeed = 3*Math.PI;
 
   // private static final double kTrackWidth = 0.346075; // 13'5/8"
   private static final double kTrackWidth = 0.346075;
@@ -114,7 +114,7 @@ public class Drivetrain {
     _drive_config.openloopRamp = 0.0;
     _drive_config.peakOutputForward = 1.0;
     _drive_config.peakOutputReverse = -1.0;
-    _drive_config.voltageCompSaturation = 11.0;
+    _drive_config.voltageCompSaturation = 9.0;
 
     m_leftLeader.configFactoryDefault();
     m_rightLeader.configFactoryDefault();
