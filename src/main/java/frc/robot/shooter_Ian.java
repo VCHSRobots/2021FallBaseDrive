@@ -5,6 +5,8 @@
 package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.TalonSRXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
@@ -18,6 +20,8 @@ import edu.wpi.first.wpilibj.SlewRateLimiter;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 
+import java.lang.System;
+
 public class shooter_Ian {
 
   /** Creates a new shooter. */
@@ -27,6 +31,12 @@ public class shooter_Ian {
   private final SlewRateLimiter m_shootLimiter = new SlewRateLimiter(4);
   // DigitalInput toplimitSwitch = new DigitalInput(0);
   // DigitalInput bottomlimitSwitch = new DigitalInput(1);
+  
+  enum Direction {
+    CW, CCW
+  }
+  double m_load_timestamp = 0.0;
+  Direction direction = Direction.CW;
   
 
   // motor controllers
@@ -82,6 +92,23 @@ public class shooter_Ian {
   }
 
   public void robotInit() {
+    // MOTOR CONFIGS
+    m_shootMotor.configFactoryDefault();
+    m_tiltMotor.configFactoryDefault();
+    m_filterMotor.configFactoryDefault();
+    m_turntableMotor.configFactoryDefault();
+
+    TalonSRXConfiguration base_config = new TalonSRXConfiguration();
+    base_config.voltageCompSaturation = 10;
+    base_config.continuousCurrentLimit = 12;
+    base_config.peakCurrentLimit = 20;
+    base_config.peakCurrentDuration = 500;
+    
+    m_shootMotor.configAllSettings(base_config);
+    m_tiltMotor.configAllSettings(base_config);
+    m_filterMotor.configAllSettings(base_config);
+    m_turntableMotor.configAllSettings(base_config);
+
 
 // SHUFFLEBOARD!!!!!!!!!!!!!!!!!!
     ShootMotorTab = Shuffleboard.getTab("Shooter Output");
@@ -106,7 +133,7 @@ public class shooter_Ian {
     ntTurnTableMotorSupply = ShootMotorTab.add("TurnTable Motor Supply Current", 0).withPosition(5, 1).withSize(2, 1)
         .withWidget(BuiltInWidgets.kVoltageView).getEntry();
         ntShooterSpeed = ShootMotorTab.add("set Shooter Speed", 0.5).withPosition(6, 1).withSize(2, 1).getEntry();
-        ntShooterSpeed.setNumber(0.3);
+        ntShooterSpeed.setNumber(0.75);
 
         timer = new Timer();
         maxTimeEnabled = 0.9;
@@ -151,43 +178,15 @@ public class shooter_Ian {
     double filterSpeed = 0;
     double turntableSpeed = 0;  
 
-   System.out.println((m_tiltMotor.getSupplyCurrent()));
-
-   if(m_controller.getPOV(0) == 270){
-    
-   }
-
-     // if the absolute value is greater that 0.01 then start the window motor;
-     if (Math.abs(tiltSpeed) > 0.01) {
+    // if the absolute value is greater that 0.01 then start the window motor;
+    if (Math.abs(tiltSpeed) > 0.01) {
       isEnabled = true;
-  } else if (Math.abs(tiltSpeed) < 0.01) {
+    } else if (Math.abs(tiltSpeed) < 0.01) {
       isEnabled = false;
-  }
+    }
 
-  // if (isEnabled == true) {
-  //     timer.start(); 
-  //     if (currentTime + (timer.get() * normalize(tiltSpeed)) >= maxTimeEnabled || currentTime + (timer.get() * normalize(tiltSpeed)) <= minTimeEnabled) {
-  //         tiltSpeed = 0.0;
-  //         System.out.print("ITS DISABLED MAN!!!!");
-          
-          
-  //     }
-  // } else if (isEnabled == false) {
-  //     timer.stop();
-  //     currentTime += timer.get() * normalize(tiltSpeed);
-  //     timer.reset();
-  // }
-  
-
- 
-
-
-
-
-
-
-   // System.out.println(toplimitSwitch.get());
-   // LOADER MOTOR !!!!!!!!!
+    // System.out.println(toplimitSwitch.get());
+    // LOADER MOTOR !!!!!!!!!
     // if (m_controller.getTriggerAxis(Hand.kLeft) > 0.05) {
     // loaderSpeed = 0.4;
     // }
@@ -196,15 +195,15 @@ public class shooter_Ian {
     // }
     
   // TILT MOTOR
-    if(m_controller.getBackButton()){
-      tiltSpeed = -0.3;
-    }
-    else if(m_controller.getStartButton()){
-      tiltSpeed = 0.3;
-    }
-    else{
-      tiltSpeed = 0;
-  }
+  //   if(m_controller.getBackButton()){
+  //     tiltSpeed = -0.3;
+  //   }
+  //   else if(m_controller.getStartButton()){
+  //     tiltSpeed = 0.3;
+  //   }
+  //   else{
+  //     tiltSpeed = 0;
+  // }
  
   //   if (m_controller.getXButton()) {
   //     filterSpeed = 0.25;
@@ -224,41 +223,33 @@ public class shooter_Ian {
      turntableSpeed = 0;
    }
 
-
-/*
-    if (toplimitSwitch.get() == false) {
-      tiltSpeed = -0.25;
-    } else if (toplimitSwitch.get()) {
-      if (m_controller.getBumper(Hand.kLeft)) {
-        tiltSpeed = -0.5;
-      } else if (m_controller.getBumper(Hand.kRight)) {
-        tiltSpeed = 0.5;
-      }
-    }
-
-    if (bottomlimitSwitch.get() == false) {
-      tiltSpeed = 0.25;
-    } else if (bottomlimitSwitch.get()) {
-
-      if (m_controller.getBumper(Hand.kLeft)) {
-        tiltSpeed = -0.5;
-      } else if (m_controller.getBumper(Hand.kRight)) {
-        tiltSpeed = 0.5;
-      }
-
-    } else {
-      tiltSpeed = 0;
-    }
-    */
     // SHOOT MOTOR
-    if (Math.abs(m_controller.getTriggerAxis(Hand.kRight)) > 0.05) {
+     if (Math.abs(m_controller.getTriggerAxis(Hand.kRight)) > 0.05) {
       // shootSpeed = Math.abs(m_controller.getTriggerAxis(Hand.kRight));
       shootSpeed = ntShooterSpeed.getNumber(0).doubleValue();
 
-      if(m_controller.getTriggerAxis(Hand.kLeft) > 0.05){
-      loaderSpeed = 0.4;
-      filterSpeed = -0.35;
-      }
+      // if(m_controller.getTriggerAxis(Hand.kLeft) > 0.05){
+      // loaderSpeed = 0.4;
+      // filterSpeed = -0.3;
+      // }
+        if(m_controller.getTriggerAxis(Hand.kLeft) > 0.05){
+          loaderSpeed = 0.4;
+          if(direction == Direction.CW){
+            filterSpeed = -0.3;
+            if(System.currentTimeMillis() > m_load_timestamp + 2000){
+              m_load_timestamp = System.currentTimeMillis();
+              direction = Direction.CCW;
+            }
+          }
+          else if(direction == Direction.CCW){
+            filterSpeed = 0.3;
+            if(System.currentTimeMillis() > m_load_timestamp + 1000){
+              m_load_timestamp = System.currentTimeMillis();
+              direction = Direction.CW;
+            }
+          }
+        }
+
     }
 
 
