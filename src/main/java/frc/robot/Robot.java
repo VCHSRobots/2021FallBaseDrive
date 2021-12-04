@@ -101,36 +101,25 @@ public class Robot extends TimedRobot {
             new Translation2d(0.7, 0),
             new Translation2d(1.2, 0),
             new Translation2d(1.7, 0),
-            new Translation2d(2, 0),
+            new Translation2d(2,   0),
             new Translation2d(2.3, 0),
-            new Translation2d(2.6, 0),
-            new Translation2d(3, 0),
-            new Translation2d(3.2, 0),
-            // new Translation2d(3.3, 0),
-            // left turn first
-            // new Translation2d(3.35, 0.1),
-           new Translation2d(3.4, 0.2),
-          //  new Translation2d(3.35, 0.3),
-          //   new Translation2d(3.36, 0.4),
-            // new Translation2d(3.39, 0.5),
-             new Translation2d(3.59, 0.7),
-             new Translation2d(3.69, 1.3),
-             new Translation2d(3.69, 2),
-            new Translation2d(3.7, 2.7), 
-            new Translation2d(3.8, 3.4), 
-            new Translation2d(3.8, 4.6),
+            new Translation2d(2.5, 0),
+            new Translation2d(2.5, 0.2),
+            new Translation2d(2.75, 0.7),
+            new Translation2d(2.75, 1.3),
+            new Translation2d(2.75, 2),
+            new Translation2d(2.75, 2.7), 
+            new Translation2d(2.75, 3.4), 
+            new Translation2d(2.75, 4),
             // left turn 2nd
-            // new Translation2d(3.5, 4.4), 
-            new Translation2d(3, 4.6), 
-            new Translation2d(2.7, 4.5), 
-            //new Translation2d(2.5, 4.4), 
-            new Translation2d(1.7, 4.5)
-           // new Translation2d(1, 4.4)
+            new Translation2d(2.5, 4), 
+            new Translation2d(2.1, 3.9), 
+            new Translation2d(1.7, 3.9)
 
         // stop*/ss
         ), 
-        new Pose2d(0.55, 4.85, new Rotation2d((7.0/8.0)*Math.PI)), 
-        new TrajectoryConfig(1.5, 1.5));
+        new Pose2d(0.25, 3.9, new Rotation2d((6.0/8.0)*Math.PI)), 
+        new TrajectoryConfig(1, 1.5));
 
     m_trajectoryB = TrajectoryGenerator.generateTrajectory(
         new Pose2d(0, 0, new Rotation2d(0)),

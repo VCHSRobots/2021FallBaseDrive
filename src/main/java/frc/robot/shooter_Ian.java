@@ -195,15 +195,15 @@ public class shooter_Ian {
     // }
     
   // TILT MOTOR
-  //   if(m_controller.getBackButton()){
-  //     tiltSpeed = -0.3;
-  //   }
-  //   else if(m_controller.getStartButton()){
-  //     tiltSpeed = 0.3;
-  //   }
-  //   else{
-  //     tiltSpeed = 0;
-  // }
+    if(m_controller.getBackButton()){
+      tiltSpeed = -0.3;
+    }
+    else if(m_controller.getStartButton()){
+      tiltSpeed = 0.5;
+    }
+    else{
+      tiltSpeed = 0;
+  }
  
   //   if (m_controller.getXButton()) {
   //     filterSpeed = 0.25;
@@ -254,7 +254,7 @@ public class shooter_Ian {
 
 
     if(m_controller.getAButton()){
-      shootSpeed = -0.2;
+      shootSpeed = -0.4;
     }
 
     // SET MOTOR TO DOUBLES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
